@@ -11,7 +11,7 @@ export default function Breakdown({ sentence }: { sentence: Sentence }) {
   const [quizMode, setQuizMode] = useState(false)
   const [showContext, setShowContext] = useState(false)
 
-  const { words, explanation, trap } = sentence.breakdown
+  const { words, translation, explanation, trap } = sentence.breakdown
   const types = [...new Set(words.map(w => w.type))]
   const filtered = activeFilter === 'all' ? words : words.filter(w => w.type === activeFilter)
 
@@ -50,9 +50,9 @@ export default function Breakdown({ sentence }: { sentence: Sentence }) {
           )}
         </p>
 
-        {breakdown.translation && (
+        {translation && (
           <p style={{ fontStyle: 'italic', color: '#888', fontSize: '1rem', marginBottom: 12, fontFamily: 'Georgia, serif' }}>
-            {breakdown.translation}
+            {translation}
           </p>
         )}
 
