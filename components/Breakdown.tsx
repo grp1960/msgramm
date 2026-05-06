@@ -50,6 +50,12 @@ export default function Breakdown({ sentence }: { sentence: Sentence }) {
           )}
         </p>
 
+        {breakdown.translation && (
+          <p style={{ fontStyle: 'italic', color: '#888', fontSize: '1rem', marginBottom: 12, fontFamily: 'Georgia, serif' }}>
+            {breakdown.translation}
+          </p>
+        )}
+
         {(sentence.ctx_before || sentence.ctx_after) && (
           <button
             onClick={() => setShowContext(v => !v)}

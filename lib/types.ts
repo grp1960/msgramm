@@ -9,6 +9,7 @@ export type WordEntry = {
 
 export type Breakdown = {
   words: WordEntry[]
+  translation: string
   explanation: string
   trap: string
 }
