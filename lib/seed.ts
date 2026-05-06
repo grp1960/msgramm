@@ -7,6 +7,7 @@ export const seedSentence: Sentence = {
   ctx_before: 'Thomas hat keinen einzigen Samstag verpasst, seit er in die Gegend gezogen ist.',
   ctx_after: 'Er kauft jede Woche dasselbe: Brot, einen Hartkäse und was auch immer ihm ins Auge fällt.',
   breakdown: {
+    translation: 'I take the train to the market on the weekend.',
     words: [
       { wid: 1, word: 'Ich', type: 'Pronoun', form: 'Subject form · 1st person singular', job: 'The one making the trip' },
       { wid: 2, word: 'fahre', type: 'Verb', form: 'From fahren · 1st person singular · present tense', note: 'German drops -en and adds -e for 1st person singular. Also covers near future — German present means both "I go" and "I\'m going to go."', job: 'The action — travelling by vehicle' },
