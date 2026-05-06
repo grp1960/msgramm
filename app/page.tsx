@@ -15,7 +15,7 @@ export default async function Home() {
   }
 
   return (
-    <main className="max-w-3xl px-10 py-10">
+    <main style={{ maxWidth: 860, padding: '40px 48px' }}>
       <Breakdown sentence={data as Sentence} />
     </main>
   )
