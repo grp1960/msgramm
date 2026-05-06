@@ -13,14 +13,14 @@ export default function Breakdown({ sentence }: { sentence: Sentence }) {
 
   const { words, explanation, trap } = sentence.breakdown
   const types = [...new Set(words.map(w => w.type))]
-
   const filtered = activeFilter === 'all' ? words : words.filter(w => w.type === activeFilter)
 
   return (
     <div>
+
       {/* Sentence */}
-      <div className="mb-6">
-        <p className="text-lg leading-relaxed" style={{ fontFamily: 'Georgia, serif', color: '#1B3A5C' }}>
+      <div className="mb-8 pb-6" style={{ borderBottom: '1px solid #E8E4DC' }}>
+        <p className="text-xl leading-relaxed mb-4" style={{ fontFamily: 'Georgia, serif', color: '#1B3A5C' }}>
           {showContext && sentence.ctx_before && (
             <span className="text-gray-400 italic">{sentence.ctx_before} </span>
           )}
@@ -50,8 +50,8 @@ export default function Breakdown({ sentence }: { sentence: Sentence }) {
         {(sentence.ctx_before || sentence.ctx_after) && (
           <button
             onClick={() => setShowContext(v => !v)}
-            className="mt-2 text-xs px-3 py-1 rounded-full border transition-colors"
-            style={{ borderColor: '#D8D4CC', color: '#666' }}
+            className="text-xs px-3 py-1 rounded-full border transition-colors"
+            style={{ borderColor: '#D8D4CC', color: '#888', background: 'white' }}
           >
             {showContext ? 'Hide paragraph' : 'In paragraph'}
           </button>
@@ -59,14 +59,14 @@ export default function Breakdown({ sentence }: { sentence: Sentence }) {
       </div>
 
       {/* Word by Word header */}
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-sm font-semibold tracking-wide uppercase text-gray-400">Word by Word</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xs font-semibold tracking-widest uppercase" style={{ color: '#999' }}>Word by Word</h2>
         <div className="flex rounded-lg overflow-hidden border" style={{ borderColor: '#D8D4CC' }}>
           {(['Study', 'Quiz'] as const).map(mode => (
             <button
               key={mode}
               onClick={() => setQuizMode(mode === 'Quiz')}
-              className="px-4 py-1 text-xs font-medium transition-colors"
+              className="px-4 py-1.5 text-xs font-medium transition-colors"
               style={{
                 background: (mode === 'Quiz') === quizMode ? '#1B3A5C' : 'white',
                 color: (mode === 'Quiz') === quizMode ? 'white' : '#666',
@@ -79,7 +79,7 @@ export default function Breakdown({ sentence }: { sentence: Sentence }) {
       </div>
 
       {/* Filter chips */}
-      <div className="flex flex-wrap gap-1.5 mb-4">
+      <div className="flex flex-wrap gap-2 mb-5">
         <button
           onClick={() => setActiveFilter('all')}
           className="px-3 py-1 rounded-full text-xs font-medium border transition-colors"
@@ -112,9 +112,9 @@ export default function Breakdown({ sentence }: { sentence: Sentence }) {
       </div>
 
       {/* Word grid — newspaper 2-column */}
-      <div className="columns-2 gap-3 mb-6" style={{ columnFill: 'balance' }}>
+      <div className="columns-2 gap-4 mb-8" style={{ columnFill: 'balance' }}>
         {filtered.map(entry => (
-          <div key={entry.wid} className="break-inside-avoid mb-3">
+          <div key={entry.wid} className="break-inside-avoid mb-4">
             <WordEntry
               entry={entry}
               highlighted={highlighted === entry.wid}
@@ -127,20 +127,21 @@ export default function Breakdown({ sentence }: { sentence: Sentence }) {
       </div>
 
       {/* Explanation */}
-      <div className="rounded-lg p-4 mb-3" style={{ background: '#F0F4F8', borderLeft: '3px solid #1B3A5C' }}>
-        <div className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: '#1B3A5C' }}>
+      <div className="rounded-lg p-5 mb-4" style={{ background: '#F0F4F8', borderLeft: '4px solid #1B3A5C' }}>
+        <div className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: '#1B3A5C' }}>
           Explanation
         </div>
         <p className="text-sm leading-relaxed text-gray-700">{explanation}</p>
       </div>
 
       {/* Grammar Trap */}
-      <div className="rounded-lg p-4" style={{ background: '#FEF9E7', borderLeft: '3px solid #8B5E00' }}>
-        <div className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: '#8B5E00' }}>
+      <div className="rounded-lg p-5" style={{ background: '#FEF9E7', borderLeft: '4px solid #8B5E00' }}>
+        <div className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: '#8B5E00' }}>
           Grammar Trap
         </div>
         <p className="text-sm leading-relaxed text-gray-700">{trap}</p>
       </div>
+
     </div>
   )
 }
