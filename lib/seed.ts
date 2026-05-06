@@ -4,8 +4,8 @@ export const seedSentence: Sentence = {
   id: 'seed-1',
   language: 'de',
   text: 'Ich fahre am Wochenende mit dem Zug zum Markt.',
-  ctx_before: "Thomas hasn't missed a Saturday since he moved to the neighbourhood.",
-  ctx_after: 'He buys the same things every week: bread, a hard cheese, and whatever catches his eye.',
+  ctx_before: 'Thomas hat keinen einzigen Samstag verpasst, seit er in die Gegend gezogen ist.',
+  ctx_after: 'Er kauft jede Woche dasselbe: Brot, einen Hartkäse und was auch immer ihm ins Auge fällt.',
   breakdown: {
     words: [
       { wid: 1, word: 'Ich', type: 'Pronoun', form: 'Subject form · 1st person singular', job: 'The one making the trip' },

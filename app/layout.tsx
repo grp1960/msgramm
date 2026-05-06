@@ -10,17 +10,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body style={{ background: '#F7F5F0', minHeight: '100vh' }}>
-        <header
-          className="flex items-baseline gap-3 px-6 py-4"
-          style={{ background: '#1B3A5C' }}
-        >
-          <h1
-            className="text-2xl text-white"
-            style={{ fontFamily: 'Georgia, serif', letterSpacing: '0.05em' }}
-          >
+        <header style={{ background: '#1B3A5C', padding: '16px 48px', display: 'flex', alignItems: 'baseline', gap: 12 }}>
+          <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '1.5rem', color: 'white', letterSpacing: '0.05em' }}>
             Ms. Gramm
           </h1>
-          <span className="text-xs text-white opacity-50 tracking-widest uppercase">
+          <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
             Sentence Breakdown
           </span>
         </header>
