@@ -1,0 +1,47 @@
+export const BADGE_COLORS: Record<string, { bg: string; color: string }> = {
+  'Pronoun':              { bg: '#EAF2FB', color: '#1A5C8F' },
+  'Verb':                 { bg: '#FEF3E2', color: '#834110' },
+  'Helper verb':          { bg: '#EBF5EB', color: '#236B27' },
+  'Possibility verb':     { bg: '#E8F5F5', color: '#1A6868' },
+  'Noun':                 { bg: '#FEF9E7', color: '#7A6000' },
+  'Article':              { bg: '#F3F3F3', color: '#555555' },
+  'Article contraction':  { bg: '#FDF0E0', color: '#8B5E00' },
+  'Preposition':          { bg: '#F0F3F4', color: '#4D5D6B' },
+  'Reason connector':     { bg: '#F4ECF7', color: '#62287D' },
+  'Condition opener':     { bg: '#FEF0ED', color: '#8B2500' },
+  'Negation':             { bg: '#F5EEEE', color: '#6B2020' },
+  'Pointing word':        { bg: '#EEEEF8', color: '#3A3A7A' },
+  'Time word':            { bg: '#EEF7F0', color: '#1A5C2A' },
+}
+
+export const HIGHLIGHT_COLORS: Record<string, { bg: string; color: string }> = {
+  'Pronoun':              { bg: '#BDD7EE', color: '#0A3A5C' },
+  'Verb':                 { bg: '#F5CBA7', color: '#5A2B08' },
+  'Helper verb':          { bg: '#B2D8B2', color: '#143D16' },
+  'Possibility verb':     { bg: '#A8DADA', color: '#0F4040' },
+  'Noun':                 { bg: '#F8D980', color: '#4A3800' },
+  'Article':              { bg: '#D0D0D0', color: '#333333' },
+  'Article contraction':  { bg: '#F0D090', color: '#4A3000' },
+  'Preposition':          { bg: '#BDC6CB', color: '#2A3840' },
+  'Reason connector':     { bg: '#D2A9E4', color: '#3D1050' },
+  'Condition opener':     { bg: '#F5C0B0', color: '#5A1A00' },
+  'Negation':             { bg: '#DDAAAA', color: '#4A1010' },
+  'Pointing word':        { bg: '#C0C4E8', color: '#20204A' },
+  'Time word':            { bg: '#A8D8B0', color: '#1A3A20' },
+}
+
+export const GLOSSARY: Record<string, string> = {
+  'Pronoun': 'Stands in for a noun — a person, thing, or idea already known from context.',
+  'Verb': 'The action or state in the sentence.',
+  'Helper verb': 'Works alongside a main verb to add tense, negation, or emphasis.',
+  'Possibility verb': 'Adds a sense of likelihood, condition, or hypothetical to the main verb.',
+  'Noun': 'A person, place, thing, or idea.',
+  'Article': 'Marks a noun and shows its gender and case in German.',
+  'Article contraction': 'A preposition and article fused into one word — common combinations that German collapses for efficiency.',
+  'Preposition': 'Shows the relationship between a noun and the rest of the sentence — direction, time, means.',
+  'Reason connector': 'Links a cause to an effect.',
+  'Condition opener': 'Opens a hypothetical — everything that follows is imaginary until the consequence clause.',
+  'Negation': 'Reverses or denies the action.',
+  'Pointing word': 'Points to something already understood in context.',
+  'Time word': 'Anchors the action in time.',
+}
