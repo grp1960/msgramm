@@ -5,7 +5,14 @@ import { Sentence } from '@/lib/types'
 import { BADGE_COLORS, HIGHLIGHT_COLORS } from '@/lib/wordTypes'
 import WordEntry from './WordEntry'
 
-export default function Breakdown({ sentence }: { sentence: Sentence }) {
+type Props = {
+  sentence: Sentence
+  saved?: boolean
+  onSave?: () => void
+  saveLabel?: string
+}
+
+export default function Breakdown({ sentence, saved, onSave, saveLabel = 'Save' }: Props) {
   const [highlighted, setHighlighted] = useState<number | null>(null)
   const [activeFilter, setActiveFilter] = useState<string>('all')
   const [quizMode, setQuizMode] = useState(false)
@@ -56,17 +63,33 @@ export default function Breakdown({ sentence }: { sentence: Sentence }) {
           </p>
         )}
 
-        {(sentence.ctx_before || sentence.ctx_after) && (
-          <button
-            onClick={() => setShowContext(v => !v)}
-            style={{
-              fontSize: '0.75rem', padding: '4px 14px', borderRadius: 20,
-              border: '1px solid #D8D4CC', color: '#888', background: 'white', cursor: 'pointer',
-            }}
-          >
-            {showContext ? 'Hide paragraph' : 'In paragraph'}
-          </button>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 8 }}>
+          {onSave !== undefined && (
+            saved ? (
+              <span style={{ fontSize: '0.85rem', color: '#27ae60', fontWeight: 500 }}>✓ Saved</span>
+            ) : (
+              <button onClick={onSave} style={{
+                fontSize: '0.85rem', padding: '6px 18px', borderRadius: 6,
+                border: '1px solid #1B3A5C', color: '#1B3A5C', background: 'white',
+                cursor: 'pointer',
+              }}>
+                {saveLabel}
+              </button>
+            )
+          )}
+          {(sentence.ctx_before || sentence.ctx_after) && (
+            <button
+              onClick={() => setShowContext(v => !v)}
+              style={{
+                fontSize: '0.75rem', padding: '4px 14px', borderRadius: 20,
+                border: '1px solid #D8D4CC', color: '#888', background: 'white', cursor: 'pointer',
+              }}
+            >
+              {showContext ? 'Hide paragraph' : 'In paragraph'}
+            </button>
+          )}
+        </div>
+
       </div>
 
       {/* Word by Word header */}

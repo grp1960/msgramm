@@ -129,22 +129,12 @@ export default function BreakdownPage({ initial }: { initial: Sentence }) {
 
         {/* Breakdown view */}
         {view === 'breakdown' && (
-          <>
-            <Breakdown sentence={sentence} />
-            <div style={{ marginTop: 24 }}>
-              {saved ? (
-                <span style={{ fontSize: '0.85rem', color: '#27ae60', fontWeight: 500 }}>✓ Saved</span>
-              ) : (
-                <button onClick={saveSentence} style={{
-                  fontSize: '0.85rem', padding: '8px 20px', borderRadius: 6,
-                  border: '1px solid #1B3A5C', color: '#1B3A5C', background: 'white',
-                  cursor: 'pointer',
-                }}>
-                  {user ? 'Save this sentence' : 'Sign in to save'}
-                </button>
-              )}
-            </div>
-          </>
+          <Breakdown
+            sentence={sentence}
+            saved={saved}
+            onSave={saveSentence}
+            saveLabel={user ? 'Save' : 'Sign in to save'}
+          />
         )}
 
         {/* Enter sentence view */}
