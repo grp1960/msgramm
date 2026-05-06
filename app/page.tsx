@@ -15,7 +15,7 @@ export default async function Home() {
   }
 
   return (
-    <main className="max-w-3xl px-8 py-8">
+    <main className="max-w-3xl px-10 py-10">
       <Breakdown sentence={data as Sentence} />
     </main>
   )

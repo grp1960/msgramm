@@ -19,7 +19,7 @@ export default function Breakdown({ sentence }: { sentence: Sentence }) {
     <div>
 
       {/* Sentence */}
-      <div className="mb-8 pb-6" style={{ borderBottom: '1px solid #E8E4DC' }}>
+      <div className="mb-10 pb-8" style={{ borderBottom: '1px solid #E8E4DC' }}>
         <p className="text-xl leading-relaxed mb-4" style={{ fontFamily: 'Georgia, serif', color: '#1B3A5C' }}>
           {showContext && sentence.ctx_before && (
             <span className="text-gray-400 italic">{sentence.ctx_before} </span>
@@ -59,7 +59,7 @@ export default function Breakdown({ sentence }: { sentence: Sentence }) {
       </div>
 
       {/* Word by Word header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-5">
         <h2 className="text-xs font-semibold tracking-widest uppercase" style={{ color: '#999' }}>Word by Word</h2>
         <div className="flex rounded-lg overflow-hidden border" style={{ borderColor: '#D8D4CC' }}>
           {(['Study', 'Quiz'] as const).map(mode => (
@@ -112,7 +112,7 @@ export default function Breakdown({ sentence }: { sentence: Sentence }) {
       </div>
 
       {/* Word grid — newspaper 2-column */}
-      <div className="columns-2 gap-4 mb-8" style={{ columnFill: 'balance' }}>
+      <div className="columns-2 gap-4 mb-10" style={{ columnFill: 'balance' }}>
         {filtered.map(entry => (
           <div key={entry.wid} className="break-inside-avoid mb-4">
             <WordEntry
@@ -127,7 +127,7 @@ export default function Breakdown({ sentence }: { sentence: Sentence }) {
       </div>
 
       {/* Explanation */}
-      <div className="rounded-lg p-5 mb-4" style={{ background: '#F0F4F8', borderLeft: '4px solid #1B3A5C' }}>
+      <div className="rounded-lg p-6 mb-5" style={{ background: '#F0F4F8', borderLeft: '4px solid #1B3A5C' }}>
         <div className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: '#1B3A5C' }}>
           Explanation
         </div>
@@ -135,7 +135,7 @@ export default function Breakdown({ sentence }: { sentence: Sentence }) {
       </div>
 
       {/* Grammar Trap */}
-      <div className="rounded-lg p-5" style={{ background: '#FEF9E7', borderLeft: '4px solid #8B5E00' }}>
+      <div className="rounded-lg p-6" style={{ background: '#FEF9E7', borderLeft: '4px solid #8B5E00' }}>
         <div className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: '#8B5E00' }}>
           Grammar Trap
         </div>
