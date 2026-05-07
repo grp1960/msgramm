@@ -12,7 +12,6 @@ export default async function Home() {
   const { data } = await supabaseServer
     .from('sentences')
     .select('*')
-    .not('breakdown->translation', 'is', null)
     .order('created_at', { ascending: true })
 
   let sentences = (data ?? []) as Sentence[]
