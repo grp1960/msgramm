@@ -109,7 +109,7 @@ export default function App() {
   }
 
   const grouped = DIFFICULTY_ORDER.reduce((acc, d) => {
-    const group = sentences.filter(s => s.difficulty === d)
+    const group = sentences.filter(s => (s.difficulty ?? 'Intermediate') === d)
     if (group.length > 0) acc[d] = group
     return acc
   }, {} as Partial<Record<Difficulty, Sentence[]>>)
