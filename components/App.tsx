@@ -92,7 +92,18 @@ export default function App() {
       if (!res.ok) throw new Error('Failed')
       const data = await res.json()
       setSentence(data)
-      setSaved(false)
+      // Auto-save to Mine if signed in
+      if (user) {
+        await supabase
+          .from('saved_sentences')
+          .insert({ user_id: user.id, sentence_id: data.id })
+          .select()
+        setSaved(true)
+        setSavedIds(ids => new Set([...ids, data.id]))
+        await loadSaved()
+      } else {
+        setSaved(false)
+      }
       setView('breakdown')
       setInput('')
     } catch {
