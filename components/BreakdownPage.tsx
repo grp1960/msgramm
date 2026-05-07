@@ -195,16 +195,28 @@ export default function BreakdownPage({ initial }: { initial: Sentence }) {
                     style={{
                       textAlign: 'left', padding: '14px 18px', borderRadius: 8,
                       border: '1px solid #E8E4DC', background: 'white', cursor: 'pointer',
+                      width: '100%',
+                    }}
+                    onMouseEnter={e => {
+                      (e.currentTarget as HTMLButtonElement).style.borderColor = '#1B3A5C'
+                      ;(e.currentTarget as HTMLButtonElement).style.background = '#F8F9FB'
+                    }}
+                    onMouseLeave={e => {
+                      (e.currentTarget as HTMLButtonElement).style.borderColor = '#E8E4DC'
+                      ;(e.currentTarget as HTMLButtonElement).style.background = 'white'
                     }}
                   >
                     <div style={{ fontFamily: 'Georgia, serif', color: '#1B3A5C', fontSize: '1rem', marginBottom: 4 }}>
                       {s.text}
                     </div>
                     {s.breakdown?.translation && (
-                      <div style={{ fontSize: '0.8rem', color: '#999', fontStyle: 'italic' }}>
+                      <div style={{ fontSize: '0.8rem', color: '#999', fontStyle: 'italic', marginBottom: 6 }}>
                         {s.breakdown.translation}
                       </div>
                     )}
+                    <div style={{ fontSize: '0.72rem', color: '#2E6DA4', fontWeight: 500 }}>
+                      View breakdown →
+                    </div>
                   </button>
                 ))}
               </div>
