@@ -1,3 +1,5 @@
+export type Difficulty = 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert'
+
 export type WordEntry = {
   wid: number
   word: string
@@ -18,6 +20,7 @@ export type Sentence = {
   id: string
   language: string
   text: string
+  difficulty: Difficulty
   ctx_before: string | null
   ctx_after: string | null
   breakdown: Breakdown

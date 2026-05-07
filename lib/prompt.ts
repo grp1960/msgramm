@@ -64,6 +64,7 @@ JSON SCHEMA — return exactly this structure:
     }
   ],
   "translation": "Natural English translation of the sentence.",
+  "difficulty": "one of: Beginner, Intermediate, Advanced, Expert — based on grammar complexity and vocabulary, not topic",
   "explanation": "2-3 sentences on the key grammatical structure. What is doing the main work and why does it matter? Plain language only.",
   "trap": "One common error or near-miss related to this sentence's grammar. Concrete example of the wrong version and why it fails."
 }

@@ -1,4 +1,4 @@
-import BreakdownPage from '@/components/BreakdownPage'
+import App from '@/components/App'
 import { createClient } from '@supabase/supabase-js'
 import { seedSentence } from '@/lib/seed'
 import { Sentence } from '@/lib/types'
@@ -12,23 +12,21 @@ export default async function Home() {
   const { data } = await supabaseServer
     .from('sentences')
     .select('*')
-    .eq('language', 'de')
     .not('breakdown->translation', 'is', null)
-    .limit(1)
-    .single()
+    .order('created_at', { ascending: true })
 
-  if (data) {
-    return <BreakdownPage initial={data as Sentence} />
+  let sentences = (data ?? []) as Sentence[]
+
+  // Seed if empty
+  if (sentences.length === 0) {
+    const { text, language, difficulty, ctx_before, ctx_after, breakdown } = seedSentence
+    const { data: inserted } = await supabaseServer
+      .from('sentences')
+      .insert({ text, language, difficulty, ctx_before, ctx_after, breakdown })
+      .select()
+      .single()
+    sentences = inserted ? [inserted as Sentence] : [seedSentence]
   }
 
-  // No sentence with translation — upsert the seed and use it
-  const { text, language, ctx_before, ctx_after, breakdown } = seedSentence
-  const { data: inserted } = await supabaseServer
-    .from('sentences')
-    .insert({ text, language, ctx_before, ctx_after, breakdown })
-    .select()
-    .single()
-
-  const initial = (inserted ?? seedSentence) as Sentence
-  return <BreakdownPage initial={initial} />
+  return <App sentences={sentences} />
 }

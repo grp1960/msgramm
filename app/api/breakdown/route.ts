@@ -44,10 +44,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'OpenAI error' }, { status: 500 })
   }
 
+  const difficulty = breakdown.difficulty ?? 'Intermediate'
+
   // Save to Supabase
   const { data, error } = await supabase
     .from('sentences')
-    .insert({ language: language ?? 'de', text, breakdown })
+    .insert({ language: language ?? 'de', text, breakdown, difficulty })
     .select()
     .single()
 
