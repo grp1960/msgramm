@@ -33,9 +33,11 @@ export default function WordEntry({ entry, highlighted, quizMode, onMouseEnter, 
         <span className="font-semibold text-base" style={{ fontFamily: 'Georgia, serif', color: '#1B3A5C' }}>
           {entry.word}
         </span>
-        <Tooltip type={entry.type} bg={colors.bg} color={colors.color}>
-          {entry.type}
-        </Tooltip>
+        {!quizMode && (
+          <Tooltip type={entry.type} bg={colors.bg} color={colors.color}>
+            {entry.type}
+          </Tooltip>
+        )}
       </div>
 
       {!quizMode && (
@@ -75,32 +77,47 @@ function getQuizOptions(correct: string): string[] {
 
 function QuizChips({ entry }: { entry: WordEntryType }) {
   const [answered, setAnswered] = useState<string | null>(null)
-  const options = getQuizOptions(entry.type)
+  const [options] = useState(() => getQuizOptions(entry.type))
+  const colors = BADGE_COLORS[entry.type] ?? { bg: '#EEE', color: '#333' }
 
   return (
-    <div className="flex flex-wrap gap-1.5 mt-2">
-      {options.map(type => {
-        const colors = BADGE_COLORS[type] ?? { bg: '#EEE', color: '#333' }
-        const isCorrect = type === entry.type
-        const isSelected = type === answered
-        let style: React.CSSProperties = { background: colors.bg, color: colors.color }
-        if (answered) {
-          if (isCorrect) style = { background: '#D4EDDA', color: '#155724', fontWeight: 600 }
-          else if (isSelected) style = { background: '#F8D7DA', color: '#721C24' }
-          else style = { ...style, opacity: 0.4 }
-        }
-        return (
-          <button
-            key={type}
-            disabled={!!answered}
-            onClick={() => setAnswered(type)}
-            className="px-2 py-0.5 rounded text-xs transition-all"
-            style={style}
-          >
-            {type}
-          </button>
-        )
-      })}
+    <div className="mt-2">
+      <div className="flex flex-wrap gap-1.5">
+        {options.map(type => {
+          const c = BADGE_COLORS[type] ?? { bg: '#EEE', color: '#333' }
+          const isCorrect = type === entry.type
+          const isSelected = type === answered
+          let style: React.CSSProperties = { background: c.bg, color: c.color }
+          if (answered) {
+            if (isCorrect) style = { background: '#D4EDDA', color: '#155724', fontWeight: 600 }
+            else if (isSelected) style = { background: '#F8D7DA', color: '#721C24' }
+            else style = { ...style, opacity: 0.4 }
+          }
+          return (
+            <button
+              key={type}
+              disabled={!!answered}
+              onClick={() => setAnswered(type)}
+              className="px-2 py-0.5 rounded text-xs transition-all"
+              style={style}
+            >
+              {type}
+            </button>
+          )
+        })}
+      </div>
+      {answered && (
+        <div className="mt-2">
+          <Tooltip type={entry.type} bg={colors.bg} color={colors.color}>
+            {entry.type}
+          </Tooltip>
+          {entry.job && (
+            <div className="text-xs font-medium mt-1" style={{ color: '#1B3A5C' }}>
+              {entry.job}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
