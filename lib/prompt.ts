@@ -58,6 +58,7 @@ JSON SCHEMA — return exactly this structure:
       "wid": 1,
       "word": "exact word as it appears in the sentence",
       "type": "one approved type from the list above",
+      "translation": "English meaning of this word in this context — omit for articles, prepositions, and contractions where the job field covers it",
       "form": "brief form note — base form, person, tense, case role (omit if nothing useful to say)",
       "note": "plain-language explanation of what this word does and why it matters (omit if obvious)",
       "job": "one short phrase: the specific role this word plays in this sentence"

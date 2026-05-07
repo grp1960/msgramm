@@ -4,6 +4,7 @@ export type WordEntry = {
   wid: number
   word: string
   type: string
+  translation?: string
   form?: string
   note?: string
   job: string

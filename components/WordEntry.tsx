@@ -42,6 +42,11 @@ export default function WordEntry({ entry, highlighted, quizMode, onMouseEnter, 
 
       {!quizMode && (
         <>
+          {entry.translation && (
+            <div style={{ fontSize: '0.85rem', color: '#555', marginTop: 2, fontStyle: 'italic' }}>
+              {entry.translation}
+            </div>
+          )}
           {entry.form && (
             <div
               className="text-xs text-gray-500 mt-1"
