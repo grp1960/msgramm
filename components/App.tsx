@@ -19,8 +19,9 @@ const DIFFICULTY_COLORS: Record<Difficulty, { bg: string; color: string }> = {
 type View = 'list' | 'breakdown' | 'enter'
 type ListFilter = 'all' | 'mine'
 
-export default function App({ sentences }: { sentences: Sentence[] }) {
+export default function App() {
   const [view, setView] = useState<View>('list')
+  const [sentences, setSentences] = useState<Sentence[]>([])
   const [sentence, setSentence] = useState<Sentence | null>(null)
   const [listFilter, setListFilter] = useState<ListFilter>('all')
   const [input, setInput] = useState('')
@@ -33,6 +34,7 @@ export default function App({ sentences }: { sentences: Sentence[] }) {
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
+    loadSentences()
     supabase.auth.getUser().then(({ data }) => setUser(data.user))
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
       setUser(session?.user ?? null)
@@ -43,6 +45,14 @@ export default function App({ sentences }: { sentences: Sentence[] }) {
   useEffect(() => {
     if (user) loadSaved()
   }, [user])
+
+  async function loadSentences() {
+    const { data } = await supabase
+      .from('sentences')
+      .select('*')
+      .order('created_at', { ascending: true })
+    if (data) setSentences(data as Sentence[])
+  }
 
   async function loadSaved() {
     const { data } = await supabase
