@@ -7,6 +7,7 @@ import { LANGUAGES } from '@/lib/languages'
 import type { User } from '@supabase/supabase-js'
 import Breakdown from './Breakdown'
 import AuthModal from './AuthModal'
+import ChatPanel from './ChatPanel'
 
 const DIFFICULTY_ORDER: Difficulty[] = ['Beginner', 'Intermediate', 'Advanced', 'Expert']
 
@@ -258,14 +259,17 @@ export default function App() {
 
         {/* Breakdown view */}
         {view === 'breakdown' && sentence && (
-          <Breakdown
-            sentence={sentence}
-            saved={saved}
-            onSave={saveSentence}
-            saveLabel={user ? 'Save' : 'Sign in to save'}
-            userTags={saved ? (userTagsMap[sentence.id] ?? []) : undefined}
-            onUserTagsChange={saved ? (tags) => updateUserTags(sentence.id, tags) : undefined}
-          />
+          <>
+            <Breakdown
+              sentence={sentence}
+              saved={saved}
+              onSave={saveSentence}
+              saveLabel={user ? 'Save' : 'Sign in to save'}
+              userTags={saved ? (userTagsMap[sentence.id] ?? []) : undefined}
+              onUserTagsChange={saved ? (tags) => updateUserTags(sentence.id, tags) : undefined}
+            />
+            <ChatPanel sentence={sentence} userId={user?.id} />
+          </>
         )}
 
         {/* Enter view */}
