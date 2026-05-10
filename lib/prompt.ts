@@ -42,6 +42,11 @@ TERMINOLOGY RULES — strictly enforced:
 - For case in any language: explain it in terms of role (subject, object, destination, means) not case names
 - Apply all rules to whatever language is given — German, Latin, French, Spanish, etc.
 
+WORD TRANSLATION RULE:
+- Every word MUST include a "translation" field with its English meaning in this context
+- Keep it short — one or two words maximum (e.g. "dog", "to go", "because", "the")
+- Only omit for article contractions where the job field fully covers it (e.g. am, zum, im)
+
 BASE FORM RULE:
 - When a word doesn't resemble its dictionary form, show it: "From [base form]" or "Completed form of [base]"
 - Always apply to: contractions (didn't → did not), conjugated forms that look different (were → be), fused forms (zum → zu + dem)
