@@ -6,7 +6,7 @@ import { SYSTEM_PROMPT } from '@/lib/prompt'
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
 export async function POST(req: NextRequest) {
-  const { sentence, language, original_id, original_language } = await req.json()
+  const { sentence, language, original_id, original_language, force } = await req.json()
 
   if (!sentence || sentence.trim().length < 4) {
     return NextResponse.json({ error: 'Sentence too short' }, { status: 400 })
@@ -14,17 +14,19 @@ export async function POST(req: NextRequest) {
 
   const text = sentence.trim()
 
-  // Check cache first
-  const { data: cached } = await supabase
-    .from('sentences')
-    .select('*')
-    .eq('text', text)
-    .eq('language', language ?? 'de')
-    .limit(1)
-    .single()
+  // Check cache (skip if force=true)
+  if (!force) {
+    const { data: cached } = await supabase
+      .from('sentences')
+      .select('*')
+      .eq('text', text)
+      .eq('language', language ?? 'de')
+      .limit(1)
+      .single()
 
-  if (cached) {
-    return NextResponse.json(cached)
+    if (cached) {
+      return NextResponse.json(cached)
+    }
   }
 
   // Call OpenAI
@@ -47,16 +49,31 @@ export async function POST(req: NextRequest) {
   const difficulty = breakdown.difficulty ?? 'Intermediate'
   const tags = Array.isArray(breakdown.tags) ? breakdown.tags : []
 
-  // Save to Supabase
-  const row: Record<string, unknown> = { language: language ?? 'de', text, breakdown, difficulty, tags }
+  // Update existing row if force, otherwise insert
+  const row: Record<string, unknown> = { breakdown, difficulty, tags, needs_refresh: false }
   if (original_id) row.original_id = original_id
   if (original_language) row.original_language = original_language
 
-  const { data, error } = await supabase
-    .from('sentences')
-    .insert(row)
-    .select()
-    .single()
+  let data, error
+  if (force) {
+    const result = await supabase
+      .from('sentences')
+      .update(row)
+      .eq('text', text)
+      .eq('language', language ?? 'de')
+      .select()
+      .single()
+    data = result.data
+    error = result.error
+  } else {
+    const result = await supabase
+      .from('sentences')
+      .insert({ language: language ?? 'de', text, ...row })
+      .select()
+      .single()
+    data = result.data
+    error = result.error
+  }
 
   if (error) {
     return NextResponse.json({ error: 'Failed to save' }, { status: 500 })
