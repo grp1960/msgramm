@@ -182,18 +182,19 @@ export default function App() {
               </div>
             )}
 
+            {/* Column headers */}
+            <TableHeader showDifficulty={listFilter === 'mine'} />
+
             {/* All — grouped by difficulty */}
             {listFilter === 'all' && (
               DIFFICULTY_ORDER.filter(d => grouped[d]).map(d => (
-                <div key={d} style={{ marginBottom: 40 }}>
-                  <div style={{ fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#999', marginBottom: 12 }}>
+                <div key={d} style={{ marginBottom: 32 }}>
+                  <div style={{ fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#999', margin: '20px 0 4px' }}>
                     {d}
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {grouped[d]!.map(s => (
-                      <SentenceRow key={s.id} s={s} onClick={() => openSentence(s)} saved={savedIds.has(s.id)} />
-                    ))}
-                  </div>
+                  {grouped[d]!.map((s, i) => (
+                    <SentenceRow key={s.id} s={s} onClick={() => openSentence(s)} saved={savedIds.has(s.id)} striped={i % 2 === 1} />
+                  ))}
                 </div>
               ))
             )}
@@ -201,13 +202,11 @@ export default function App() {
             {/* Mine */}
             {listFilter === 'mine' && (
               savedList.length === 0 ? (
-                <p style={{ color: '#999', fontSize: '0.9rem' }}>No saved sentences yet.</p>
+                <p style={{ color: '#999', fontSize: '0.9rem', marginTop: 16 }}>No saved sentences yet.</p>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {savedList.map(s => (
-                    <SentenceRow key={s.id} s={s} onClick={() => openSentence(s)} saved showDifficulty />
-                  ))}
-                </div>
+                savedList.map((s, i) => (
+                  <SentenceRow key={s.id} s={s} onClick={() => openSentence(s)} saved showDifficulty striped={i % 2 === 1} />
+                ))
               )
             )}
           </div>
@@ -270,11 +269,32 @@ export default function App() {
   )
 }
 
-function SentenceRow({ s, onClick, saved, showDifficulty }: {
+function TableHeader({ showDifficulty }: { showDifficulty?: boolean }) {
+  const cols = showDifficulty
+    ? { sentence: '38%', translation: '38%', difficulty: '14%', saved: '10%' }
+    : { sentence: '50%', translation: '50%' }
+
+  return (
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: showDifficulty ? '38% 38% 14% 10%' : '50% 50%',
+      padding: '6px 18px',
+      borderBottom: '2px solid #E8E4DC',
+    }}>
+      <span style={headerCell}>Sentence</span>
+      <span style={headerCell}>Translation</span>
+      {showDifficulty && <span style={{ ...headerCell, textAlign: 'center' }}>Difficulty</span>}
+      {showDifficulty && <span style={{ ...headerCell, textAlign: 'center' }}>Saved</span>}
+    </div>
+  )
+}
+
+function SentenceRow({ s, onClick, saved, showDifficulty, striped }: {
   s: Sentence
   onClick: () => void
   saved?: boolean
   showDifficulty?: boolean
+  striped?: boolean
 }) {
   const [hover, setHover] = useState(false)
   const dc = s.difficulty ? DIFFICULTY_COLORS[s.difficulty] : null
@@ -285,40 +305,48 @@ function SentenceRow({ s, onClick, saved, showDifficulty }: {
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       style={{
-        textAlign: 'left', padding: '14px 18px', borderRadius: 8,
-        border: `1px solid ${hover ? '#1B3A5C' : '#E8E4DC'}`,
-        background: hover ? '#F8F9FB' : 'white',
+        display: 'grid',
+        gridTemplateColumns: showDifficulty ? '38% 38% 14% 10%' : '50% 50%',
+        alignItems: 'center',
+        textAlign: 'left',
+        padding: '10px 18px',
+        border: 'none',
+        borderBottom: '1px solid #F0EDE8',
+        background: hover ? '#F0F4F8' : striped ? '#FAFAF8' : 'white',
         cursor: 'pointer', width: '100%',
-        transition: 'border-color 0.15s, background 0.15s',
+        transition: 'background 0.12s',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-        <div>
-          <div style={{ fontFamily: 'Georgia, serif', color: '#1B3A5C', fontSize: '1rem', marginBottom: 4 }}>
-            {s.text}
-          </div>
-          {s.breakdown?.translation && (
-            <div style={{ fontSize: '0.8rem', color: '#999', fontStyle: 'italic' }}>
-              {s.breakdown.translation}
-            </div>
-          )}
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
-          {showDifficulty && dc && s.difficulty && (
+      <span style={{ fontFamily: 'Georgia, serif', color: '#1B3A5C', fontSize: '0.95rem', paddingRight: 16 }}>
+        {s.text}
+      </span>
+      <span style={{ fontSize: '0.85rem', color: '#888', fontStyle: 'italic', paddingRight: 16 }}>
+        {s.breakdown?.translation ?? ''}
+      </span>
+      {showDifficulty && (
+        <span style={{ textAlign: 'center' }}>
+          {dc && s.difficulty && (
             <span style={{
-              fontSize: '0.68rem', fontWeight: 600, padding: '2px 10px', borderRadius: 20,
+              fontSize: '0.65rem', fontWeight: 600, padding: '2px 8px', borderRadius: 20,
               background: dc.bg, color: dc.color,
             }}>
               {s.difficulty}
             </span>
           )}
-          {saved && (
-            <span style={{ fontSize: '0.7rem', color: '#27ae60', fontWeight: 500 }}>✓ Saved</span>
-          )}
-        </div>
-      </div>
+        </span>
+      )}
+      {showDifficulty && (
+        <span style={{ textAlign: 'center', fontSize: '0.75rem', color: '#27ae60', fontWeight: 500 }}>
+          {saved ? '✓' : ''}
+        </span>
+      )}
     </button>
   )
+}
+
+const headerCell: React.CSSProperties = {
+  fontSize: '0.65rem', fontWeight: 600, letterSpacing: '0.1em',
+  textTransform: 'uppercase', color: '#AAA',
 }
 
 const navBtn: React.CSSProperties = {
