@@ -333,19 +333,16 @@ export default function App() {
 }
 
 function TableHeader({ showDifficulty }: { showDifficulty?: boolean }) {
-  const cols = showDifficulty
-    ? { sentence: '38%', translation: '38%', difficulty: '14%', saved: '10%' }
-    : { sentence: '50%', translation: '50%' }
-
   return (
     <div style={{
       display: 'grid',
-      gridTemplateColumns: showDifficulty ? '38% 38% 14% 10%' : '50% 50%',
+      gridTemplateColumns: showDifficulty ? '35% 35% 10% 10% 10%' : '45% 45% 10%',
       padding: '6px 18px',
       borderBottom: '2px solid #E8E4DC',
     }}>
       <span style={headerCell}>Sentence</span>
       <span style={headerCell}>Translation</span>
+      <span style={{ ...headerCell, textAlign: 'right' }}>Language</span>
       {showDifficulty && <span style={{ ...headerCell, textAlign: 'center' }}>Difficulty</span>}
       {showDifficulty && <span style={{ ...headerCell, textAlign: 'center' }}>Saved</span>}
     </div>
@@ -369,7 +366,7 @@ function SentenceRow({ s, onClick, saved, showDifficulty, striped }: {
       onMouseLeave={() => setHover(false)}
       style={{
         display: 'grid',
-        gridTemplateColumns: showDifficulty ? '38% 38% 14% 10%' : '50% 50%',
+        gridTemplateColumns: showDifficulty ? '35% 35% 10% 10% 10%' : '45% 45% 10%',
         alignItems: 'center',
         textAlign: 'left',
         padding: '10px 18px',
@@ -385,6 +382,14 @@ function SentenceRow({ s, onClick, saved, showDifficulty, striped }: {
       </span>
       <span style={{ fontSize: '0.85rem', color: '#888', fontStyle: 'italic', paddingRight: 16 }}>
         {s.breakdown?.translation ?? ''}
+      </span>
+      <span style={{ textAlign: 'right' }}>
+        <span style={{
+          fontSize: '0.65rem', fontWeight: 600, padding: '2px 8px', borderRadius: 20,
+          background: '#F0EDE8', color: '#888', letterSpacing: '0.04em',
+        }}>
+          {LANGUAGES.find(l => l.code === s.language)?.label ?? s.language}
+        </span>
       </span>
       {showDifficulty && (
         <span style={{ textAlign: 'center' }}>
