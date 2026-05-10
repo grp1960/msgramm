@@ -5,6 +5,7 @@ export const seedSentence: Sentence = {
   language: 'de',
   text: 'Ich fahre am Wochenende mit dem Zug zum Markt.',
   difficulty: 'Beginner',
+  tags: [],
   ctx_before: 'Thomas hat keinen einzigen Samstag verpasst, seit er in die Gegend gezogen ist.',
   ctx_after: 'Er kauft jede Woche dasselbe: Brot, einen Hartkäse und was auch immer ihm ins Auge fällt.',
   breakdown: {
