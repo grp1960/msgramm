@@ -205,29 +205,26 @@ export default function App() {
             )}
 
             {/* Language filter */}
-            {activeLangs.length > 1 && (
-              <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
-                {['all', ...activeLangs].map(code => {
-                  const label = code === 'all' ? 'All languages' : (LANGUAGES.find(l => l.code === code)?.label ?? code)
-                  const active = langFilter === code
-                  return (
-                    <button
-                      key={code}
-                      onClick={() => setLangFilter(code)}
-                      style={{
-                        padding: '4px 14px', borderRadius: 20, fontSize: '0.75rem',
-                        fontWeight: 500, cursor: 'pointer',
-                        background: active ? '#1B3A5C' : 'white',
-                        color: active ? 'white' : '#666',
-                        border: `1px solid ${active ? '#1B3A5C' : '#D8D4CC'}`,
-                      }}
-                    >
-                      {label}
-                    </button>
-                  )
-                })}
-              </div>
-            )}
+            <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
+              {[{ code: 'all', label: 'All' }, ...LANGUAGES].map(({ code, label }) => {
+                const active = langFilter === code
+                return (
+                  <button
+                    key={code}
+                    onClick={() => setLangFilter(code)}
+                    style={{
+                      padding: '4px 14px', borderRadius: 20, fontSize: '0.75rem',
+                      fontWeight: 500, cursor: 'pointer',
+                      background: active ? '#1B3A5C' : 'white',
+                      color: active ? 'white' : '#666',
+                      border: `1px solid ${active ? '#1B3A5C' : '#D8D4CC'}`,
+                    }}
+                  >
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
 
             {/* Column headers */}
             <TableHeader showDifficulty={listFilter === 'mine'} />
