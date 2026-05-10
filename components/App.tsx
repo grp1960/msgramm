@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Sentence, Difficulty } from '@/lib/types'
 import { supabase } from '@/lib/supabase'
+import { LANGUAGES } from '@/lib/languages'
 import type { User } from '@supabase/supabase-js'
 import Breakdown from './Breakdown'
 import AuthModal from './AuthModal'
@@ -24,6 +25,8 @@ export default function App() {
   const [sentences, setSentences] = useState<Sentence[]>([])
   const [sentence, setSentence] = useState<Sentence | null>(null)
   const [listFilter, setListFilter] = useState<ListFilter>('all')
+  const [langFilter, setLangFilter] = useState<string>('all')
+  const [inputLang, setInputLang] = useState<string>(LANGUAGES[0].code)
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -100,7 +103,7 @@ export default function App() {
       const res = await fetch('/api/breakdown', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sentence: input.trim(), language: 'de' }),
+        body: JSON.stringify({ sentence: input.trim(), language: inputLang }),
       })
       if (!res.ok) throw new Error('Failed')
       const data = await res.json()
@@ -132,11 +135,17 @@ export default function App() {
     setView('breakdown')
   }
 
+  const visibleSentences = langFilter === 'all'
+    ? sentences
+    : sentences.filter(s => s.language === langFilter)
+
   const grouped = DIFFICULTY_ORDER.reduce((acc, d) => {
-    const group = sentences.filter(s => (s.difficulty ?? 'Intermediate') === d)
+    const group = visibleSentences.filter(s => (s.difficulty ?? 'Intermediate') === d)
     if (group.length > 0) acc[d] = group
     return acc
   }, {} as Partial<Record<Difficulty, Sentence[]>>)
+
+  const activeLangs = [...new Set(sentences.map(s => s.language))]
 
   const displayList = listFilter === 'mine' ? savedList : null
 
@@ -195,6 +204,31 @@ export default function App() {
               </div>
             )}
 
+            {/* Language filter */}
+            {activeLangs.length > 1 && (
+              <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
+                {['all', ...activeLangs].map(code => {
+                  const label = code === 'all' ? 'All languages' : (LANGUAGES.find(l => l.code === code)?.label ?? code)
+                  const active = langFilter === code
+                  return (
+                    <button
+                      key={code}
+                      onClick={() => setLangFilter(code)}
+                      style={{
+                        padding: '4px 14px', borderRadius: 20, fontSize: '0.75rem',
+                        fontWeight: 500, cursor: 'pointer',
+                        background: active ? '#1B3A5C' : 'white',
+                        color: active ? 'white' : '#666',
+                        border: `1px solid ${active ? '#1B3A5C' : '#D8D4CC'}`,
+                      }}
+                    >
+                      {label}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+
             {/* Column headers */}
             <TableHeader showDifficulty={listFilter === 'mine'} />
 
@@ -243,9 +277,26 @@ export default function App() {
             <p style={{ fontFamily: 'Georgia, serif', fontSize: '1.1rem', color: '#1B3A5C', marginBottom: 8 }}>
               Type a sentence to break down.
             </p>
-            <p style={{ fontSize: '0.8rem', color: '#999', marginBottom: 20 }}>
+            <p style={{ fontSize: '0.8rem', color: '#999', marginBottom: 16 }}>
               Works best with complete sentences. Interesting grammar makes for a better breakdown.
             </p>
+            <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
+              {LANGUAGES.map(l => (
+                <button
+                  key={l.code}
+                  onClick={() => setInputLang(l.code)}
+                  style={{
+                    padding: '4px 14px', borderRadius: 20, fontSize: '0.75rem',
+                    fontWeight: 500, cursor: 'pointer',
+                    background: inputLang === l.code ? '#1B3A5C' : 'white',
+                    color: inputLang === l.code ? 'white' : '#666',
+                    border: `1px solid ${inputLang === l.code ? '#1B3A5C' : '#D8D4CC'}`,
+                  }}
+                >
+                  {l.label}
+                </button>
+              ))}
+            </div>
             <textarea
               value={input}
               onChange={e => setInput(e.target.value)}
