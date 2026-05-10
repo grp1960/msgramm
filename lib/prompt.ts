@@ -66,6 +66,7 @@ JSON SCHEMA — return exactly this structure:
   ],
   "translation": "Natural English translation of the sentence.",
   "difficulty": "one of: Beginner, Intermediate, Advanced, Expert — based on grammar complexity and vocabulary, not topic",
+  "tags": ["3 to 6 lowercase-hyphenated tags covering: grammar concepts present (e.g. dative, modal-verb, subordinate-clause), and register/domain (e.g. formal, informal, scientific, legal, literary, everyday)"],
   "explanation": "2-3 sentences on the key grammatical structure. What is doing the main work and why does it matter? Plain language only.",
   "trap": "One common error or near-miss related to this sentence's grammar. Concrete example of the wrong version and why it fails."
 }

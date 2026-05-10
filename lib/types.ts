@@ -22,6 +22,7 @@ export type Sentence = {
   language: string
   text: string
   difficulty: Difficulty
+  tags: string[]
   ctx_before: string | null
   ctx_after: string | null
   breakdown: Breakdown

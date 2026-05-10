@@ -32,6 +32,7 @@ export default function App() {
   const [saved, setSaved] = useState(false)
   const [savedList, setSavedList] = useState<Sentence[]>([])
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
+  const [userTagsMap, setUserTagsMap] = useState<Record<string, string[]>>({})
 
   useEffect(() => {
     loadSentences()
@@ -64,7 +65,19 @@ export default function App() {
       const list = data.map((r: any) => r.sentences as Sentence)
       setSavedList(list)
       setSavedIds(new Set(list.map(s => s.id)))
+      const tagsMap: Record<string, string[]> = {}
+      data.forEach((r: any) => { tagsMap[r.sentences.id] = r.user_tags ?? [] })
+      setUserTagsMap(tagsMap)
     }
+  }
+
+  async function updateUserTags(sentenceId: string, tags: string[]) {
+    await supabase
+      .from('saved_sentences')
+      .update({ user_tags: tags })
+      .eq('user_id', user!.id)
+      .eq('sentence_id', sentenceId)
+    setUserTagsMap(m => ({ ...m, [sentenceId]: tags }))
   }
 
   async function saveSentence() {
@@ -219,6 +232,8 @@ export default function App() {
             saved={saved}
             onSave={saveSentence}
             saveLabel={user ? 'Save' : 'Sign in to save'}
+            userTags={saved ? (userTagsMap[sentence.id] ?? []) : undefined}
+            onUserTagsChange={saved ? (tags) => updateUserTags(sentence.id, tags) : undefined}
           />
         )}
 

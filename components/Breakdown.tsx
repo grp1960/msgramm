@@ -10,9 +10,11 @@ type Props = {
   saved?: boolean
   onSave?: () => void
   saveLabel?: string
+  userTags?: string[]
+  onUserTagsChange?: (tags: string[]) => void
 }
 
-export default function Breakdown({ sentence, saved, onSave, saveLabel = 'Save' }: Props) {
+export default function Breakdown({ sentence, saved, onSave, saveLabel = 'Save', userTags, onUserTagsChange }: Props) {
   const [highlighted, setHighlighted] = useState<number | null>(null)
   const [activeFilter, setActiveFilter] = useState<string>('all')
   const [quizMode, setQuizMode] = useState(false)
@@ -171,13 +173,101 @@ export default function Breakdown({ sentence, saved, onSave, saveLabel = 'Save' 
       </div>
 
       {/* Grammar Trap */}
-      <div style={{ borderRadius: 8, padding: '20px 24px', background: '#FEF9E7', borderLeft: '4px solid #8B5E00' }}>
+      <div style={{ borderRadius: 8, padding: '20px 24px', marginBottom: 24, background: '#FEF9E7', borderLeft: '4px solid #8B5E00' }}>
         <div style={{ fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#8B5E00', marginBottom: 10 }}>
           Grammar Trap
         </div>
         <p style={{ fontSize: '0.875rem', lineHeight: 1.7, color: '#444' }}>{trap}</p>
       </div>
 
+      {/* Tags */}
+      {(sentence.tags?.length > 0 || onUserTagsChange !== undefined) && (
+        <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+
+          {/* GPT tags */}
+          {sentence.tags?.length > 0 && (
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <div style={tagLabel}>Tags</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {sentence.tags.map(t => (
+                  <span key={t} style={gptTag}>#{t}</span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* User tags */}
+          {onUserTagsChange !== undefined && (
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <div style={tagLabel}>My tags</div>
+              <UserTags tags={userTags ?? []} onChange={onUserTagsChange} />
+            </div>
+          )}
+
+        </div>
+      )}
+
     </div>
   )
+}
+
+function UserTags({ tags, onChange }: { tags: string[]; onChange: (tags: string[]) => void }) {
+  const [input, setInput] = useState('')
+
+  function add() {
+    const val = input.trim().replace(/^#/, '').toLowerCase().replace(/\s+/g, '-')
+    if (!val || tags.includes(val)) { setInput(''); return }
+    onChange([...tags, val])
+    setInput('')
+  }
+
+  function remove(t: string) {
+    onChange(tags.filter(x => x !== t))
+  }
+
+  return (
+    <div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+        {tags.map(t => (
+          <span key={t} style={{ ...userTag, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            #{t}
+            <button onClick={() => remove(t)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#666', fontSize: '0.75rem', padding: 0, lineHeight: 1 }}>×</button>
+          </span>
+        ))}
+      </div>
+      <div style={{ display: 'flex', gap: 6 }}>
+        <input
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); add() } }}
+          placeholder="Add a tag…"
+          style={{
+            fontSize: '0.8rem', padding: '4px 10px', borderRadius: 6,
+            border: '1px solid #D8D4CC', outline: 'none', width: 140,
+          }}
+        />
+        <button onClick={add} style={{
+          fontSize: '0.8rem', padding: '4px 12px', borderRadius: 6,
+          border: '1px solid #D8D4CC', background: 'white', cursor: 'pointer', color: '#555',
+        }}>
+          Add
+        </button>
+      </div>
+    </div>
+  )
+}
+
+const tagLabel: React.CSSProperties = {
+  fontSize: '0.65rem', fontWeight: 600, letterSpacing: '0.1em',
+  textTransform: 'uppercase', color: '#AAA', marginBottom: 8,
+}
+
+const gptTag: React.CSSProperties = {
+  fontSize: '0.75rem', padding: '3px 10px', borderRadius: 20,
+  background: '#EEF2F7', color: '#4A6FA5', fontWeight: 500,
+}
+
+const userTag: React.CSSProperties = {
+  fontSize: '0.75rem', padding: '3px 10px', borderRadius: 20,
+  background: '#F0FFF4', color: '#2E7D4F', fontWeight: 500,
 }

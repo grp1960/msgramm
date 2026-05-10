@@ -45,11 +45,12 @@ export async function POST(req: NextRequest) {
   }
 
   const difficulty = breakdown.difficulty ?? 'Intermediate'
+  const tags = Array.isArray(breakdown.tags) ? breakdown.tags : []
 
   // Save to Supabase
   const { data, error } = await supabase
     .from('sentences')
-    .insert({ language: language ?? 'de', text, breakdown, difficulty })
+    .insert({ language: language ?? 'de', text, breakdown, difficulty, tags })
     .select()
     .single()
 
