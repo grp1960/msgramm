@@ -28,7 +28,7 @@ export default function WordEntry({ entry, highlighted, quizMode, onMouseEnter, 
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
-      <div className="flex items-center gap-2 flex-wrap mb-1">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
         <span className="text-xs text-gray-400 font-mono">{entry.wid}.</span>
         <span className="font-semibold text-base" style={{ fontFamily: 'Georgia, serif', color: '#1B3A5C' }}>
           {entry.word}
@@ -38,16 +38,17 @@ export default function WordEntry({ entry, highlighted, quizMode, onMouseEnter, 
             {entry.type}
           </Tooltip>
         )}
+        {!quizMode && entry.translation && (
+          <span style={{ fontSize: '0.8rem', color: '#888', fontStyle: 'italic' }}>
+            {entry.translation}
+          </span>
+        )}
       </div>
 
       {!quizMode && (
         <>
-          {entry.translation && (
-            <div style={{ fontSize: '0.85rem', color: '#555', marginTop: 2, fontStyle: 'italic' }}>
-              {entry.translation}
-            </div>
-          )}
           {entry.form && (
+
             <div
               className="text-xs text-gray-500 mt-1"
               dangerouslySetInnerHTML={{ __html: italicise(entry.form) }}
