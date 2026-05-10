@@ -6,7 +6,7 @@ import { SYSTEM_PROMPT } from '@/lib/prompt'
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
 export async function POST(req: NextRequest) {
-  const { sentence, language } = await req.json()
+  const { sentence, language, original_id, original_language } = await req.json()
 
   if (!sentence || sentence.trim().length < 4) {
     return NextResponse.json({ error: 'Sentence too short' }, { status: 400 })
@@ -48,9 +48,13 @@ export async function POST(req: NextRequest) {
   const tags = Array.isArray(breakdown.tags) ? breakdown.tags : []
 
   // Save to Supabase
+  const row: Record<string, unknown> = { language: language ?? 'de', text, breakdown, difficulty, tags }
+  if (original_id) row.original_id = original_id
+  if (original_language) row.original_language = original_language
+
   const { data, error } = await supabase
     .from('sentences')
-    .insert({ language: language ?? 'de', text, breakdown, difficulty, tags })
+    .insert(row)
     .select()
     .single()
 
