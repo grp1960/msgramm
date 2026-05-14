@@ -136,6 +136,14 @@ export default function App() {
     setView('breakdown')
   }
 
+  function openNextSentence() {
+    if (!sentence) return
+    const list = langFilter === 'all' ? sentences : sentences.filter(s => s.language === langFilter)
+    const idx = list.findIndex(s => s.id === sentence.id)
+    const next = list[idx + 1] ?? list[0]
+    if (next && next.id !== sentence.id) openSentence(next)
+  }
+
   const visibleSentences = langFilter === 'all'
     ? sentences
     : sentences.filter(s => s.language === langFilter)
@@ -267,6 +275,7 @@ export default function App() {
               saveLabel={user ? 'Save' : 'Sign in to save'}
               userTags={saved ? (userTagsMap[sentence.id] ?? []) : undefined}
               onUserTagsChange={saved ? (tags) => updateUserTags(sentence.id, tags) : undefined}
+              onNextSentence={openNextSentence}
             />
             <ChatPanel sentence={sentence} userId={user?.id} />
           </>
