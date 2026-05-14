@@ -57,6 +57,22 @@ VERB PERSON RULE:
 - If the form is the same for all persons (English modals, English simple past), say so explicitly
 - For completed forms used with a helper: note "No person — [helper verb] carries it"
 
+QUIZ CHAIN FIELDS — include on every word where applicable:
+- "case": grammatical case — use exactly one of: "Nominative", "Accusative", "Dative", "Genitive". Include for nouns, articles, article contractions, and pronouns in inflected languages (German, Latin, etc.). Omit for other types or non-inflected languages.
+- "gender": grammatical gender — use exactly one of: "Masculine", "Feminine", "Neuter". Include for nouns, articles, article contractions, and pronouns. Omit otherwise.
+- "number": use exactly "Singular" or "Plural". Include for nouns and pronouns.
+- "tense": use one of: "Present", "Past", "Perfect", "Pluperfect", "Future". Include for verbs and helper verbs.
+- "person": use one of: "1st singular", "2nd singular", "3rd singular", "1st plural", "2nd plural", "3rd plural". Include for verbs and helper verbs.
+- "rationale": an object of short, rule-based explanations — one key per applicable field, plus "type":
+  - "type": one sentence explaining why this word has this type
+  - "case": why this case, stated as role (e.g. "Accusative — direct object of the verb")
+  - "gender": a pattern or rule learners can reuse (e.g. "Words ending in -ung are always feminine in German")
+  - "number": why singular or plural
+  - "tense": why this tense
+  - "person": why this person
+  Keep each rationale to one sentence. Prefer transferable rules over one-off explanations.
+NOTE: The case/gender/number/tense/person fields use standard grammar terms as quiz answer labels. This is intentional and separate from the terminology rules that govern note/form/job fields.
+
 JSON SCHEMA — return exactly this structure:
 {
   "words": [
@@ -67,7 +83,13 @@ JSON SCHEMA — return exactly this structure:
       "translation": "English meaning of this word in this context — omit for articles, prepositions, and contractions where the job field covers it",
       "form": "brief form note — base form, person, tense, case role (omit if nothing useful to say)",
       "note": "plain-language explanation of what this word does and why it matters (omit if obvious)",
-      "job": "one short phrase: the specific role this word plays in this sentence"
+      "job": "one short phrase: the specific role this word plays in this sentence",
+      "case": "Nominative|Accusative|Dative|Genitive — omit if not applicable",
+      "gender": "Masculine|Feminine|Neuter — omit if not applicable",
+      "number": "Singular|Plural — omit if not applicable",
+      "tense": "Present|Past|Perfect|Pluperfect|Future — omit if not applicable",
+      "person": "1st singular|2nd singular|3rd singular|1st plural|2nd plural|3rd plural — omit if not applicable",
+      "rationale": {"type": "...", "case": "...", "gender": "..."}
     }
   ],
   "translation": "Natural English translation of the sentence.",

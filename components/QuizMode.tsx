@@ -1,49 +1,83 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { Sentence } from '@/lib/types'
+import { Sentence, WordEntry } from '@/lib/types'
 import { BADGE_COLORS } from '@/lib/wordTypes'
+import { CHAIN_QUESTIONS, ChainQuestion } from '@/lib/chainQuestions'
 
 type Props = {
   sentence: Sentence
   onNextSentence?: () => void
 }
 
-const ALL_TYPES = Object.keys(BADGE_COLORS)
+type StepAnswer = {
+  selected: string
+  movedOn: boolean
+}
 
-function makeOptions(correct: string, seed: number): string[] {
-  // Deterministic shuffle using the word index as a seed so options don't
-  // re-randomise on re-render — but still vary per word.
+type WordState = {
+  openedChainQs: ChainQuestion[]
+  answers: (StepAnswer | null)[]
+}
+
+const ALL_TYPES = Object.keys(BADGE_COLORS)
+const MAX_CHAIN = 2
+
+function deterministicOptions(correct: string, pool: string[], seed: number): string[] {
   const rng = (n: number) => ((seed * 2654435761 + n * 1234567) >>> 0) / 0xffffffff
-  const pool = ALL_TYPES.filter(t => t !== correct)
+  const others = pool
+    .filter(t => t !== correct)
     .map((t, i) => ({ t, r: rng(i) }))
     .sort((a, b) => a.r - b.r)
     .slice(0, 3)
     .map(x => x.t)
-  const opts = [...pool, correct]
+  return [...others, correct]
     .map((t, i) => ({ t, r: rng(i + 100) }))
     .sort((a, b) => a.r - b.r)
     .map(x => x.t)
-  return opts
+}
+
+function getCorrectForStep(word: WordEntry, ws: WordState, step: number): string {
+  if (step === 0) return word.type
+  const q = ws.openedChainQs[step - 1]
+  return (word as Record<string, unknown>)[q.field] as string ?? ''
+}
+
+function getRationaleForStep(word: WordEntry, ws: WordState, step: number): string {
+  const key = step === 0 ? 'type' : ws.openedChainQs[step - 1].id
+  return word.rationale?.[key] ?? (step === 0 ? word.job : '')
+}
+
+function getPromptForStep(word: WordEntry, ws: WordState, step: number): string {
+  if (step === 0) return `What type of word is "${word.word}"?`
+  return ws.openedChainQs[step - 1].prompt
+}
+
+function getOptionsForStep(word: WordEntry, ws: WordState, step: number, seed: number): string[] {
+  if (step === 0) return deterministicOptions(word.type, ALL_TYPES, seed)
+  return ws.openedChainQs[step - 1].options
+}
+
+function getNextAvailableQ(word: WordEntry, ws: WordState, usedIds: Set<string>): ChainQuestion | null {
+  if (ws.openedChainQs.length >= MAX_CHAIN) return null
+  const openedIds = new Set(ws.openedChainQs.map(q => q.id))
+  const candidates = CHAIN_QUESTIONS[word.type] ?? []
+  return candidates.find(q => {
+    const val = (word as Record<string, unknown>)[q.field]
+    return val != null && val !== '' && !usedIds.has(q.id) && !openedIds.has(q.id)
+  }) ?? null
 }
 
 export default function QuizMode({ sentence, onNextSentence }: Props) {
   const { words } = sentence.breakdown
   const [currentIdx, setCurrentIdx] = useState(0)
-  const [answers, setAnswers] = useState<Record<number, string>>({})
+  const [wordStates, setWordStates] = useState<Record<number, WordState>>({})
+  const [usedQuestionIds, setUsedQuestionIds] = useState<Set<string>>(new Set())
 
-  // Stable options per word, keyed by sentence id
-  const optionsMap = useMemo(() => {
-    const map: Record<number, string[]> = {}
-    words.forEach((w, i) => { map[w.wid] = makeOptions(w.type, i) })
-    return map
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sentence.id])
-
-  // Reset state when sentence changes
   useEffect(() => {
     setCurrentIdx(0)
-    setAnswers({})
+    setWordStates({})
+    setUsedQuestionIds(new Set())
   }, [sentence.id])
 
   const navigate = useCallback((delta: number) => {
@@ -51,76 +85,110 @@ export default function QuizMode({ sentence, onNextSentence }: Props) {
   }, [words.length])
 
   useEffect(() => {
-    function onKey(e: KeyboardEvent) {
+    const handler = (e: KeyboardEvent) => {
       if (e.key === 'ArrowRight') { e.preventDefault(); navigate(1) }
       if (e.key === 'ArrowLeft') { e.preventDefault(); navigate(-1) }
     }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
   }, [navigate])
 
   const currentWord = words[currentIdx]
   if (!currentWord) return null
 
-  const answered = answers[currentWord.wid]
-  const isCorrect = answered === currentWord.type
-  const options = optionsMap[currentWord.wid] ?? []
+  const ws: WordState = wordStates[currentWord.wid] ?? { openedChainQs: [], answers: [null] }
+  const activeStep = ws.openedChainQs.length
 
-  function select(type: string) {
-    if (answered) return
-    setAnswers(prev => ({ ...prev, [currentWord.wid]: type }))
+  function setWs(wid: number, update: (prev: WordState) => WordState) {
+    setWordStates(prev => {
+      const current = prev[wid] ?? { openedChainQs: [], answers: [null] }
+      return { ...prev, [wid]: update(current) }
+    })
   }
 
-  const answeredCount = Object.keys(answers).length
-  const correctCount = Object.entries(answers).filter(([wid, t]) => {
-    const w = words.find(w => w.wid === Number(wid))
-    return w && w.type === t
-  }).length
+  function handleSelect(selected: string) {
+    setWs(currentWord.wid, prev => {
+      const newAnswers = [...prev.answers]
+      newAnswers[activeStep] = { selected, movedOn: false }
+      return { ...prev, answers: newAnswers }
+    })
+  }
+
+  function handleTryAgain() {
+    setWs(currentWord.wid, prev => {
+      const newAnswers = [...prev.answers]
+      newAnswers[activeStep] = null
+      return { ...prev, answers: newAnswers }
+    })
+  }
+
+  function handleMoveOn() {
+    setWs(currentWord.wid, prev => {
+      const newAnswers = [...prev.answers]
+      if (newAnswers[activeStep]) {
+        newAnswers[activeStep] = { ...newAnswers[activeStep]!, movedOn: true }
+      }
+      return { ...prev, answers: newAnswers }
+    })
+  }
+
+  function handleOpenNext(nextQ: ChainQuestion) {
+    setUsedQuestionIds(prev => new Set([...prev, nextQ.id]))
+    setWs(currentWord.wid, prev => ({
+      ...prev,
+      openedChainQs: [...prev.openedChainQs, nextQ],
+      answers: [...prev.answers, null],
+    }))
+  }
+
+  const nextQ = getNextAvailableQ(currentWord, ws, usedQuestionIds)
+  const activeAnswer = ws.answers[activeStep]
+  const activeCorrect = getCorrectForStep(currentWord, ws, activeStep)
+  const activeIsCorrect = activeAnswer !== null && activeAnswer.selected === activeCorrect
+  const canOpenNext = activeAnswer !== null &&
+    (activeIsCorrect || activeAnswer.movedOn) &&
+    nextQ !== null
+
+  const { correctCount, totalAnswered } = useMemo(() => {
+    let correct = 0, total = 0
+    words.forEach(w => {
+      const state = wordStates[w.wid]
+      if (!state) return
+      state.answers.forEach((ans, step) => {
+        if (!ans) return
+        total++
+        if (ans.selected === getCorrectForStep(w, state, step)) correct++
+      })
+    })
+    return { correctCount: correct, totalAnswered: total }
+  }, [wordStates, words])
 
   return (
     <div>
 
       {/* Interactive sentence */}
       <div style={{
-        fontFamily: 'Georgia, serif',
-        fontSize: '1.25rem',
-        lineHeight: 2.1,
-        marginBottom: 28,
-        color: '#1B3A5C',
-        userSelect: 'none',
+        fontFamily: 'Georgia, serif', fontSize: '1.25rem', lineHeight: 2.1,
+        marginBottom: 28, color: '#1B3A5C', userSelect: 'none',
       }}>
         {words.map((w, i) => {
+          const state = wordStates[w.wid]
+          const firstAns = state?.answers[0]
+          const isRight = firstAns && firstAns.selected === w.type
           const isCurrent = i === currentIdx
-          const ans = answers[w.wid]
-          const wordCorrect = ans === w.type
 
-          let bg = 'transparent'
-          let color = '#1B3A5C'
-          let boxShadow = 'none'
-          let borderBottom = '2px solid transparent'
-
-          if (isCurrent) {
-            bg = '#1B3A5C'
-            color = 'white'
-            boxShadow = '0 2px 6px rgba(27,58,92,0.25)'
-          } else if (ans) {
-            borderBottom = `2px solid ${wordCorrect ? '#27ae60' : '#e74c3c'}`
-          }
+          let bg = 'transparent', color = '#1B3A5C', borderBottom = '2px solid transparent', boxShadow = 'none'
+          if (isCurrent) { bg = '#1B3A5C'; color = 'white'; boxShadow = '0 2px 6px rgba(27,58,92,0.25)' }
+          else if (firstAns) { borderBottom = `2px solid ${isRight ? '#27ae60' : '#e74c3c'}` }
 
           return (
             <span key={w.wid}>
               <span
                 onClick={() => setCurrentIdx(i)}
-                title={ans ? (wordCorrect ? '✓ Correct' : `✗ ${w.type}`) : w.word}
+                title={w.word}
                 style={{
-                  display: 'inline-block',
-                  cursor: 'pointer',
-                  borderRadius: 5,
-                  padding: '0 4px',
-                  background: bg,
-                  color,
-                  boxShadow,
-                  borderBottom,
+                  display: 'inline-block', cursor: 'pointer', borderRadius: 5, padding: '0 4px',
+                  background: bg, color, boxShadow, borderBottom,
                   transition: 'background 0.15s, color 0.15s',
                 }}
               >
@@ -133,169 +201,92 @@ export default function QuizMode({ sentence, onNextSentence }: Props) {
         <span>.</span>
       </div>
 
-      {/* Score line — once any word is answered */}
-      {answeredCount > 0 && (
+      {/* Score line */}
+      {totalAnswered > 0 && (
         <div style={{ fontSize: '0.72rem', color: '#AAA', marginBottom: 16, letterSpacing: '0.04em' }}>
-          {correctCount} correct · {answeredCount - correctCount} wrong · {words.length - answeredCount} remaining
+          {correctCount} correct · {totalAnswered - correctCount} wrong · {words.length - Object.keys(wordStates).length} untouched
         </div>
       )}
 
-      {/* Question card */}
-      <div style={{
-        border: '1px solid #E8E4DC',
-        borderRadius: 10,
-        padding: '20px 22px',
-        marginBottom: 24,
-        background: 'white',
-      }}>
+      {/* Question stack for current word */}
+      <div style={{ marginBottom: 24 }}>
 
-        <div style={{ fontSize: '0.82rem', color: '#666', marginBottom: 14 }}>
-          What type of word is{' '}
-          <span style={{
-            fontFamily: 'Georgia, serif',
-            fontWeight: 700,
-            color: '#1B3A5C',
-            fontSize: '1rem',
-          }}>
-            {currentWord.word}
-          </span>
-          ?
-        </div>
-
-        {/* Options — 2-column grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-          {options.map(type => {
-            const c = BADGE_COLORS[type] ?? { bg: '#EEE', color: '#333' }
-            const isSelected = type === answered
-            const isCorrectOption = type === currentWord.type
-            const faded = !!answered && !isSelected && !isCorrectOption
-
-            let bg = c.bg
-            let color = c.color
-            let border = `1.5px solid ${c.color}40`
-
-            if (answered) {
-              if (isCorrectOption) {
-                bg = '#D4EDDA'; color = '#155724'; border = '1.5px solid #27ae60'
-              } else if (isSelected) {
-                bg = '#F8D7DA'; color = '#721C24'; border = '1.5px solid #e74c3c'
-              }
-            }
-
-            return (
-              <button
-                key={type}
-                onClick={() => select(type)}
-                disabled={!!answered}
-                style={{
-                  padding: '8px 12px',
-                  borderRadius: 6,
-                  border,
-                  background: bg,
-                  color,
-                  fontSize: '0.78rem',
-                  fontWeight: 500,
-                  cursor: answered ? 'default' : 'pointer',
-                  textAlign: 'left',
-                  opacity: faded ? 0.3 : 1,
-                  transition: 'opacity 0.2s, background 0.15s',
-                }}
-              >
-                {type}
-              </button>
-            )
-          })}
-        </div>
-
-        {/* Reveal */}
-        {answered && (
-          <div style={{
-            borderTop: '1px solid #E8E4DC',
-            marginTop: 18,
-            paddingTop: 16,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 6,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: '1.1rem' }}>{isCorrect ? '✓' : '✗'}</span>
-              <span style={{
-                fontSize: '0.85rem',
-                fontWeight: 600,
-                color: isCorrect ? '#155724' : '#721C24',
-              }}>
-                {isCorrect ? 'Correct' : `It's a ${currentWord.type}`}
+        {/* Collapsed answered steps */}
+        {Array.from({ length: activeStep }, (_, step) => {
+          const ans = ws.answers[step]
+          if (!ans) return null
+          const correct = getCorrectForStep(currentWord, ws, step)
+          const isRight = ans.selected === correct
+          return (
+            <div key={step} style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '7px 14px', marginBottom: 8,
+              background: '#F8F8F6', borderRadius: 6,
+              borderLeft: `3px solid ${isRight ? '#27ae60' : '#e74c3c'}`,
+              fontSize: '0.82rem',
+            }}>
+              <span style={{ fontWeight: 600, color: isRight ? '#27ae60' : '#e74c3c' }}>
+                {isRight ? '✓' : '✗'}
               </span>
+              <span style={{ color: '#444' }}>{correct}</span>
+              {!isRight && (
+                <span style={{ fontSize: '0.72rem', color: '#999' }}>
+                  · you said: {ans.selected}
+                </span>
+              )}
             </div>
+          )
+        })}
 
-            {currentWord.job && (
-              <p style={{ margin: 0, fontSize: '0.8rem', color: '#555', lineHeight: 1.55 }}>
-                {currentWord.job}
-              </p>
-            )}
-
-            {/* Keyboard hint */}
-            <p style={{ margin: '4px 0 0', fontSize: '0.7rem', color: '#BBB' }}>
-              Press → or click Next to continue
-            </p>
-
-            {/* Future: chain questions expand here as additional rows */}
-          </div>
-        )}
+        {/* Active question card */}
+        <QuestionCard
+          prompt={getPromptForStep(currentWord, ws, activeStep)}
+          options={getOptionsForStep(currentWord, ws, activeStep, currentIdx)}
+          correct={activeCorrect}
+          rationale={getRationaleForStep(currentWord, ws, activeStep)}
+          answer={activeAnswer}
+          onSelect={handleSelect}
+          onTryAgain={handleTryAgain}
+          onMoveOn={handleMoveOn}
+          canOpenNext={canOpenNext}
+          nextQPrompt={nextQ?.prompt ?? null}
+          onOpenNext={() => nextQ && handleOpenNext(nextQ)}
+        />
       </div>
 
       {/* Navigation row */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-
-        {/* Prev / counter / Next */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <button
-            onClick={() => navigate(-1)}
-            disabled={currentIdx === 0}
-            style={navBtn(currentIdx === 0)}
-          >
+          <button onClick={() => navigate(-1)} disabled={currentIdx === 0} style={navBtn(currentIdx === 0)}>
             ← Prev
           </button>
           <span style={{ fontSize: '0.72rem', color: '#AAA', minWidth: 52, textAlign: 'center' }}>
             {currentIdx + 1} / {words.length}
           </span>
-          <button
-            onClick={() => navigate(1)}
-            disabled={currentIdx === words.length - 1}
-            style={navBtn(currentIdx === words.length - 1)}
-          >
+          <button onClick={() => navigate(1)} disabled={currentIdx === words.length - 1} style={navBtn(currentIdx === words.length - 1)}>
             Next →
           </button>
         </div>
-
-        {/* New sentence */}
         {onNextSentence && (
-          <button
-            onClick={onNextSentence}
-            style={{
-              padding: '8px 18px',
-              borderRadius: 6,
-              border: '1px solid #1B3A5C',
-              background: 'white',
-              color: '#1B3A5C',
-              cursor: 'pointer',
-              fontSize: '0.78rem',
-              fontWeight: 500,
-            }}
-          >
+          <button onClick={onNextSentence} style={{
+            padding: '8px 18px', borderRadius: 6, border: '1px solid #1B3A5C',
+            background: 'white', color: '#1B3A5C', cursor: 'pointer',
+            fontSize: '0.78rem', fontWeight: 500,
+          }}>
             New sentence →
           </button>
         )}
       </div>
 
       {/* Progress dots */}
-      <div style={{ display: 'flex', gap: 5, marginTop: 18, flexWrap: 'wrap', alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', alignItems: 'center' }}>
         {words.map((w, i) => {
-          const ans = answers[w.wid]
-          const wordCorrect = ans === w.type
+          const state = wordStates[w.wid]
+          const firstAns = state?.answers[0]
+          const isRight = firstAns && firstAns.selected === w.type
           let bg = '#E0DDD8'
           if (i === currentIdx) bg = '#1B3A5C'
-          else if (ans) bg = wordCorrect ? '#27ae60' : '#e74c3c'
+          else if (firstAns) bg = isRight ? '#27ae60' : '#e74c3c'
           return (
             <button
               key={w.wid}
@@ -304,11 +295,8 @@ export default function QuizMode({ sentence, onNextSentence }: Props) {
               style={{
                 width: i === currentIdx ? 10 : 8,
                 height: i === currentIdx ? 10 : 8,
-                borderRadius: '50%',
-                background: bg,
-                border: 'none',
-                padding: 0,
-                cursor: 'pointer',
+                borderRadius: '50%', background: bg, border: 'none',
+                padding: 0, cursor: 'pointer',
                 transition: 'background 0.2s, width 0.15s, height 0.15s',
               }}
             />
@@ -320,15 +308,141 @@ export default function QuizMode({ sentence, onNextSentence }: Props) {
   )
 }
 
+type QuestionCardProps = {
+  prompt: string
+  options: string[]
+  correct: string
+  rationale: string
+  answer: StepAnswer | null
+  onSelect: (v: string) => void
+  onTryAgain: () => void
+  onMoveOn: () => void
+  canOpenNext: boolean
+  nextQPrompt: string | null
+  onOpenNext: () => void
+}
+
+function QuestionCard({
+  prompt, options, correct, rationale, answer,
+  onSelect, onTryAgain, onMoveOn, canOpenNext, nextQPrompt, onOpenNext,
+}: QuestionCardProps) {
+  const isAnswered = answer !== null
+  const isCorrect = isAnswered && answer.selected === correct
+  const isWrong = isAnswered && !isCorrect
+  const showTryAgainMoveOn = isWrong && !answer.movedOn
+  const showChainGesture = canOpenNext && (isCorrect || (isWrong && answer.movedOn))
+
+  const cols = options.length <= 2 ? '1fr 1fr' : '1fr 1fr'
+
+  return (
+    <div style={{ border: '1px solid #E8E4DC', borderRadius: 10, padding: '20px 22px', background: 'white' }}>
+
+      <div style={{ fontSize: '0.82rem', color: '#666', marginBottom: 14 }}>
+        {prompt}
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: cols, gap: 8 }}>
+        {options.map(opt => {
+          const isSelected = opt === answer?.selected
+          const isCorrectOpt = opt === correct
+          const faded = isAnswered && !isSelected && !isCorrectOpt
+
+          let bg = '#F8F8F6', color = '#444', border = '1.5px solid #E0DDD8'
+          if (isAnswered) {
+            if (isCorrectOpt) { bg = '#D4EDDA'; color = '#155724'; border = '1.5px solid #27ae60' }
+            else if (isSelected) { bg = '#F8D7DA'; color = '#721C24'; border = '1.5px solid #e74c3c' }
+          }
+
+          return (
+            <button
+              key={opt}
+              onClick={() => !isAnswered && onSelect(opt)}
+              disabled={isAnswered}
+              style={{
+                padding: '8px 12px', borderRadius: 6, border, background: bg, color,
+                fontSize: '0.78rem', fontWeight: 500,
+                cursor: isAnswered ? 'default' : 'pointer',
+                textAlign: 'left', opacity: faded ? 0.3 : 1,
+                transition: 'opacity 0.2s, background 0.15s',
+              }}
+            >
+              {opt}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Reveal */}
+      {isAnswered && (
+        <div style={{ borderTop: '1px solid #E8E4DC', marginTop: 16, paddingTop: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 12 }}>
+            <span style={{ fontSize: '1rem', flexShrink: 0 }}>{isCorrect ? '✓' : '✗'}</span>
+            <div>
+              <div style={{
+                fontSize: '0.82rem', fontWeight: 600,
+                color: isCorrect ? '#155724' : '#721C24',
+                marginBottom: rationale ? 4 : 0,
+              }}>
+                {isCorrect ? 'Correct' : `It's ${correct}`}
+              </div>
+              {rationale && (
+                <p style={{ margin: 0, fontSize: '0.8rem', color: '#555', lineHeight: 1.55 }}>
+                  {rationale}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {showTryAgainMoveOn && (
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={onTryAgain} style={actionBtn('secondary')}>Try again</button>
+              <button onClick={onMoveOn} style={actionBtn('primary')}>Move on</button>
+            </div>
+          )}
+
+          {showChainGesture && nextQPrompt && (
+            <button
+              onClick={onOpenNext}
+              style={{
+                width: '100%', textAlign: 'left', padding: '10px 14px',
+                background: '#F5F3EF', border: '1px dashed #C8C4BC', borderRadius: 6,
+                cursor: 'pointer', fontSize: '0.78rem', color: '#666',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                marginTop: showTryAgainMoveOn ? 0 : 0,
+              }}
+            >
+              <span>{nextQPrompt}</span>
+              <span style={{ fontSize: '0.7rem', color: '#AAA' }}>▼</span>
+            </button>
+          )}
+
+          {isCorrect && !canOpenNext && (
+            <p style={{ margin: '4px 0 0', fontSize: '0.7rem', color: '#BBB' }}>
+              Press → or click Next to continue
+            </p>
+          )}
+        </div>
+      )}
+
+    </div>
+  )
+}
+
 function navBtn(disabled: boolean): React.CSSProperties {
   return {
-    padding: '8px 16px',
-    borderRadius: 6,
-    border: '1px solid #D8D4CC',
+    padding: '8px 16px', borderRadius: 6, border: '1px solid #D8D4CC',
     background: disabled ? '#F5F5F5' : 'white',
     color: disabled ? '#CCCCCC' : '#555555',
     cursor: disabled ? 'default' : 'pointer',
-    fontSize: '0.82rem',
-    fontWeight: 500,
+    fontSize: '0.82rem', fontWeight: 500,
+  }
+}
+
+function actionBtn(variant: 'primary' | 'secondary'): React.CSSProperties {
+  return {
+    padding: '6px 16px', borderRadius: 6, fontSize: '0.78rem', fontWeight: 500, cursor: 'pointer',
+    border: variant === 'primary' ? '1px solid #1B3A5C' : '1px solid #D8D4CC',
+    background: variant === 'primary' ? '#1B3A5C' : 'white',
+    color: variant === 'primary' ? 'white' : '#666',
   }
 }

@@ -8,6 +8,13 @@ export type WordEntry = {
   form?: string
   note?: string
   job: string
+  // Quiz chain fields — populated by GPT at analysis time
+  case?: string
+  gender?: string
+  number?: string
+  tense?: string
+  person?: string
+  rationale?: Record<string, string>
 }
 
 export type Breakdown = {
