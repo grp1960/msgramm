@@ -32,6 +32,8 @@ export type Sentence = {
   tags: string[]
   ctx_before: string | null
   ctx_after: string | null
+  ctx_before_translation: string | null
+  ctx_after_translation: string | null
   breakdown: Breakdown
   created_at: string
 }

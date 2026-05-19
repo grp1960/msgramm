@@ -32,11 +32,16 @@ export default function Breakdown({ sentence, saved, onSave, saveLabel = 'Save',
       {/* ── Study mode: full sentence section ── */}
       {!quizMode && (
         <div style={{ marginBottom: 40, paddingBottom: 32, borderBottom: '1px solid #E8E4DC' }}>
-          <p style={{ fontFamily: 'Georgia, serif', color: '#1B3A5C', fontSize: '1.25rem', lineHeight: 1.7, marginBottom: 16 }}>
+          <div style={{ fontFamily: 'Georgia, serif', fontSize: '1.25rem', lineHeight: 1.7, marginBottom: 16 }}>
             {showContext && sentence.ctx_before && (
-              <span style={{ color: '#aaa', fontStyle: 'italic' }}>{sentence.ctx_before} </span>
+              <div style={{ marginBottom: 8 }}>
+                <div style={{ color: '#aaa', fontStyle: 'italic' }}>{sentence.ctx_before}</div>
+                {sentence.ctx_before_translation && (
+                  <div style={{ color: '#bbb', fontStyle: 'italic', fontSize: '0.95rem' }}>{sentence.ctx_before_translation}</div>
+                )}
+              </div>
             )}
-            <span>
+            <div style={{ color: '#1B3A5C' }}>
               {words.map((w, i) => {
                 const hlColors = HIGHLIGHT_COLORS[w.type]
                 const isHl = highlighted === w.wid
@@ -56,11 +61,16 @@ export default function Breakdown({ sentence, saved, onSave, saveLabel = 'Save',
                 )
               })}
               .
-            </span>
+            </div>
             {showContext && sentence.ctx_after && (
-              <span style={{ color: '#aaa', fontStyle: 'italic' }}> {sentence.ctx_after}</span>
+              <div style={{ marginTop: 8 }}>
+                <div style={{ color: '#aaa', fontStyle: 'italic' }}>{sentence.ctx_after}</div>
+                {sentence.ctx_after_translation && (
+                  <div style={{ color: '#bbb', fontStyle: 'italic', fontSize: '0.95rem' }}>{sentence.ctx_after_translation}</div>
+                )}
+              </div>
             )}
-          </p>
+          </div>
 
           {translation && (
             <p style={{ fontStyle: 'italic', color: '#888', fontSize: '1rem', marginBottom: 12, fontFamily: 'Georgia, serif' }}>
