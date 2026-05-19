@@ -8,6 +8,8 @@ export const seedSentence: Sentence = {
   tags: [],
   ctx_before: 'Thomas hat keinen einzigen Samstag verpasst, seit er in die Gegend gezogen ist.',
   ctx_after: 'Er kauft jede Woche dasselbe: Brot, einen Hartkäse und was auch immer ihm ins Auge fällt.',
+  ctx_before_translation: null,
+  ctx_after_translation: null,
   breakdown: {
     translation: 'I take the train to the market on the weekend.',
     words: [
