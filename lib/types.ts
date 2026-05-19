@@ -24,6 +24,22 @@ export type Breakdown = {
   trap: string
 }
 
+export type TopicBlock =
+  | { type: 'paragraph'; data: { text: string } }
+  | { type: 'header'; data: { text: string; level: number } }
+
+export type Topic = {
+  id: string
+  slug: string
+  language: string
+  title: string
+  body: { blocks: TopicBlock[] }
+  word_type: string | null
+  lemmas: string[] | null
+  chain_answers: string[] | null
+  created_at: string
+}
+
 export type Sentence = {
   id: string
   language: string

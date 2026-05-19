@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
-import { Sentence } from '@/lib/types'
+import { useState, useEffect } from 'react'
+import { Sentence, Topic } from '@/lib/types'
+import { supabase } from '@/lib/supabase'
 import { BADGE_COLORS, HIGHLIGHT_COLORS } from '@/lib/wordTypes'
 import WordEntry from './WordEntry'
 import QuizMode from './QuizMode'
@@ -21,6 +22,17 @@ export default function Breakdown({ sentence, saved, onSave, saveLabel = 'Save',
   const [activeFilter, setActiveFilter] = useState<string>('all')
   const [quizMode, setQuizMode] = useState(false)
   const [showContext, setShowContext] = useState(false)
+  const [topicByType, setTopicByType] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    supabase.from('topics').select('slug, word_type').not('word_type', 'is', null)
+      .then(({ data }) => {
+        if (!data) return
+        const map: Record<string, string> = {}
+        data.forEach((t: Pick<Topic, 'slug' | 'word_type'>) => { if (t.word_type) map[t.word_type] = t.slug })
+        setTopicByType(map)
+      })
+  }, [])
 
   const { words, translation, explanation, trap } = sentence.breakdown
   const types = [...new Set(words.map(w => w.type))]
@@ -216,6 +228,7 @@ export default function Breakdown({ sentence, saved, onSave, saveLabel = 'Save',
                   entry={entry}
                   highlighted={highlighted === entry.wid}
                   quizMode={false}
+                  topicSlug={topicByType[entry.type]}
                   onMouseEnter={() => setHighlighted(entry.wid)}
                   onMouseLeave={() => setHighlighted(null)}
                 />

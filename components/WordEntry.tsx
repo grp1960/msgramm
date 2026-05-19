@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { WordEntry as WordEntryType } from '@/lib/types'
 import { BADGE_COLORS } from '@/lib/wordTypes'
 import Tooltip from './Tooltip'
@@ -11,11 +12,12 @@ type Props = {
   entry: WordEntryType
   highlighted: boolean
   quizMode: boolean
+  topicSlug?: string
   onMouseEnter: () => void
   onMouseLeave: () => void
 }
 
-export default function WordEntry({ entry, highlighted, quizMode, onMouseEnter, onMouseLeave }: Props) {
+export default function WordEntry({ entry, highlighted, quizMode, topicSlug, onMouseEnter, onMouseLeave }: Props) {
   const colors = BADGE_COLORS[entry.type] ?? { bg: '#EEE', color: '#333' }
 
   return (
@@ -60,8 +62,15 @@ export default function WordEntry({ entry, highlighted, quizMode, onMouseEnter, 
               dangerouslySetInnerHTML={{ __html: italicise(entry.note) }}
             />
           )}
-          <div className="text-xs font-medium mt-1.5" style={{ color: '#1B3A5C' }}>
-            {entry.job}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 6 }}>
+            <div className="text-xs font-medium" style={{ color: '#1B3A5C' }}>
+              {entry.job}
+            </div>
+            {topicSlug && (
+              <Link href={`/topics/${topicSlug}`} style={{ fontSize: '0.7rem', color: '#4A6FA5', textDecoration: 'none', whiteSpace: 'nowrap', marginLeft: 8 }}>
+                Learn more →
+              </Link>
+            )}
           </div>
         </>
       )}

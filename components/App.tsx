@@ -5,6 +5,7 @@ import { Sentence, Difficulty } from '@/lib/types'
 import { supabase } from '@/lib/supabase'
 import { LANGUAGES } from '@/lib/languages'
 import type { User } from '@supabase/supabase-js'
+import Link from 'next/link'
 import Breakdown from './Breakdown'
 import AuthModal from './AuthModal'
 import ChatPanel from './ChatPanel'
@@ -178,6 +179,7 @@ export default function App() {
           {view !== 'enter' && (
             <button onClick={() => setView('enter')} style={navBtn}>Enter a sentence</button>
           )}
+          <Link href="/topics" style={navBtn}>Topics</Link>
           {user ? (
             <button onClick={() => supabase.auth.signOut()} style={navBtn}>Sign out</button>
           ) : (
