@@ -32,51 +32,54 @@ export default function Breakdown({ sentence, saved, onSave, saveLabel = 'Save',
       {/* ── Study mode: full sentence section ── */}
       {!quizMode && (
         <div style={{ marginBottom: 40, paddingBottom: 32, borderBottom: '1px solid #E8E4DC' }}>
-          <div style={{ fontFamily: 'Georgia, serif', fontSize: '1.25rem', lineHeight: 1.7, marginBottom: 16 }}>
-            {showContext && sentence.ctx_before && (
-              <div style={{ marginBottom: 8 }}>
-                <div style={{ color: '#aaa', fontStyle: 'italic' }}>{sentence.ctx_before}</div>
-                {sentence.ctx_before_translation && (
-                  <div style={{ color: '#bbb', fontStyle: 'italic', fontSize: '0.95rem' }}>{sentence.ctx_before_translation}</div>
-                )}
-              </div>
-            )}
-            <div style={{ color: '#1B3A5C' }}>
-              {words.map((w, i) => {
-                const hlColors = HIGHLIGHT_COLORS[w.type]
-                const isHl = highlighted === w.wid
-                return (
-                  <span key={w.wid}>
-                    <span
-                      style={{
+          <div style={{ fontFamily: 'Georgia, serif', fontSize: '1.25rem', lineHeight: 1.9, marginBottom: 16 }}>
+            {/* Foreign language line */}
+            <div>
+              {showContext && sentence.ctx_before && (
+                <span style={{ color: '#aaa' }}>{sentence.ctx_before} </span>
+              )}
+              <span style={{ color: '#1B3A5C', fontWeight: 600 }}>
+                {words.map((w, i) => {
+                  const hlColors = HIGHLIGHT_COLORS[w.type]
+                  const isHl = highlighted === w.wid
+                  return (
+                    <span key={w.wid}>
+                      <span style={{
                         borderRadius: 3, padding: '0 2px', transition: 'background 0.15s',
                         cursor: 'default',
                         ...(isHl && hlColors ? { background: hlColors.bg, color: hlColors.color } : {}),
-                      }}
-                    >
-                      {w.word}
+                      }}>
+                        {w.word}
+                      </span>
+                      {i < words.length - 1 ? ' ' : ''}
                     </span>
-                    {i < words.length - 1 ? ' ' : ''}
-                  </span>
-                )
-              })}
-              .
+                  )
+                })}
+                .
+              </span>
+              {showContext && sentence.ctx_after && (
+                <span style={{ color: '#aaa' }}> {sentence.ctx_after}</span>
+              )}
             </div>
-            {showContext && sentence.ctx_after && (
-              <div style={{ marginTop: 8 }}>
-                <div style={{ color: '#aaa', fontStyle: 'italic' }}>{sentence.ctx_after}</div>
+            {/* Translation line */}
+            {showContext && (sentence.ctx_before_translation || translation || sentence.ctx_after_translation) && (
+              <div style={{ fontSize: '1rem', color: '#888', fontStyle: 'italic' }}>
+                {sentence.ctx_before_translation && (
+                  <span>{sentence.ctx_before_translation} </span>
+                )}
+                {translation && (
+                  <span style={{ color: '#555', fontWeight: 600, fontStyle: 'normal' }}>{translation}</span>
+                )}
                 {sentence.ctx_after_translation && (
-                  <div style={{ color: '#bbb', fontStyle: 'italic', fontSize: '0.95rem' }}>{sentence.ctx_after_translation}</div>
+                  <span> {sentence.ctx_after_translation}</span>
                 )}
               </div>
             )}
+            {/* Translation line when no context shown */}
+            {!showContext && translation && (
+              <div style={{ fontSize: '1rem', color: '#888', fontStyle: 'italic' }}>{translation}</div>
+            )}
           </div>
-
-          {translation && (
-            <p style={{ fontStyle: 'italic', color: '#888', fontSize: '1rem', marginBottom: 12, fontFamily: 'Georgia, serif' }}>
-              {translation}
-            </p>
-          )}
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 8 }}>
             {onSave !== undefined && (
