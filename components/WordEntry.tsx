@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { WordEntry as WordEntryType } from '@/lib/types'
+
+type GrammarField = keyof WordEntryType
 import { BADGE_COLORS } from '@/lib/wordTypes'
 import Tooltip from './Tooltip'
 
@@ -50,7 +52,6 @@ export default function WordEntry({ entry, highlighted, quizMode, topicSlug, onM
       {!quizMode && (
         <>
           {entry.form && (
-
             <div
               className="text-xs text-gray-500 mt-1"
               dangerouslySetInnerHTML={{ __html: italicise(entry.form) }}
@@ -62,6 +63,7 @@ export default function WordEntry({ entry, highlighted, quizMode, topicSlug, onM
               dangerouslySetInnerHTML={{ __html: italicise(entry.note) }}
             />
           )}
+          <GrammarChips entry={entry} />
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 6 }}>
             <div className="text-xs font-medium" style={{ color: '#1B3A5C' }}>
               {entry.job}
@@ -82,6 +84,34 @@ export default function WordEntry({ entry, highlighted, quizMode, topicSlug, onM
 
 function italicise(text: string) {
   return text.replace(/\*([^*]+)\*/g, '<em>$1</em>')
+}
+
+const GRAMMAR_FIELDS: Partial<Record<string, GrammarField[]>> = {
+  'Noun':               ['gender', 'case', 'number'],
+  'Pronoun':            ['gender', 'case'],
+  'Article':            ['gender', 'case'],
+  'Article contraction':['gender', 'case'],
+  'Verb':               ['tense', 'person'],
+  'Helper verb':        ['tense', 'person'],
+  'Possibility verb':   ['person'],
+}
+
+function GrammarChips({ entry }: { entry: WordEntryType }) {
+  const fields = GRAMMAR_FIELDS[entry.type] ?? []
+  const chips = fields.map(f => entry[f] as string | undefined).filter(Boolean)
+  if (!chips.length) return null
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 6 }}>
+      {chips.map(chip => (
+        <span key={chip} style={{
+          fontSize: '0.65rem', padding: '1px 7px', borderRadius: 20,
+          background: '#EEF2F7', color: '#4A6FA5', fontWeight: 500,
+        }}>
+          {chip}
+        </span>
+      ))}
+    </div>
+  )
 }
 
 function getQuizOptions(correct: string): string[] {
