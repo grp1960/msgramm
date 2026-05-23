@@ -13,7 +13,7 @@ export default function SentencePage({ sentence }: { sentence: Sentence }) {
   const [user, setUser] = useState<User | null>(null)
   const [saved, setSaved] = useState(false)
   const [userTags, setUserTags] = useState<string[]>([])
-  const [showAuth, setShowAuth] = useState(false)
+  const [showAuth, setShowAuth] = useState(false) // for Sign in button
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user))
@@ -41,14 +41,6 @@ export default function SentencePage({ sentence }: { sentence: Sentence }) {
         }
       })
   }, [user, sentence.id])
-
-  async function saveSentence() {
-    if (!user) { setShowAuth(true); return }
-    const { error } = await supabase
-      .from('saved_sentences')
-      .insert({ user_id: user.id, sentence_id: sentence.id })
-    if (!error) setSaved(true)
-  }
 
   async function updateUserTags(tags: string[]) {
     await supabase
@@ -87,8 +79,6 @@ export default function SentencePage({ sentence }: { sentence: Sentence }) {
       <main style={{ maxWidth: 860, padding: '40px 48px' }}>
         <Breakdown
           sentence={sentence}
-          saved={saved}
-          onSave={saveSentence}
           userTags={saved ? userTags : undefined}
           onUserTagsChange={saved ? updateUserTags : undefined}
         />
