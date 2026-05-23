@@ -8,7 +8,6 @@ type GrammarField = keyof WordEntryType
 import { BADGE_COLORS } from '@/lib/wordTypes'
 import Tooltip from './Tooltip'
 
-const ALL_TYPES = Object.keys(BADGE_COLORS)
 
 type Props = {
   entry: WordEntryType
@@ -115,7 +114,8 @@ function GrammarChips({ entry }: { entry: WordEntryType }) {
 }
 
 function getQuizOptions(correct: string): string[] {
-  const pool = ALL_TYPES.filter(t => t !== correct)
+  const allTypes = Object.keys(BADGE_COLORS)
+  const pool = allTypes.filter(t => t !== correct)
   const distractors = pool.sort(() => Math.random() - 0.5).slice(0, 3)
   return [...distractors, correct].sort(() => Math.random() - 0.5)
 }

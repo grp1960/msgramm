@@ -157,8 +157,6 @@ export default function App() {
 
   const activeLangs = [...new Set(sentences.map(s => s.language))]
 
-  const displayList = listFilter === 'mine' ? savedList : null
-
   return (
     <>
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
