@@ -270,9 +270,6 @@ export default function App() {
           <>
             <Breakdown
               sentence={sentence}
-              saved={saved}
-              onSave={saveSentence}
-              saveLabel={user ? 'Save' : 'Sign in to save'}
               userTags={saved ? (userTagsMap[sentence.id] ?? []) : undefined}
               onUserTagsChange={saved ? (tags) => updateUserTags(sentence.id, tags) : undefined}
               onNextSentence={openNextSentence}
