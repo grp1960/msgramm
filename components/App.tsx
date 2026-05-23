@@ -1,14 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Sentence, Difficulty } from '@/lib/types'
 import { supabase } from '@/lib/supabase'
 import { LANGUAGES } from '@/lib/languages'
 import type { User } from '@supabase/supabase-js'
 import Link from 'next/link'
-import Breakdown from './Breakdown'
 import AuthModal from './AuthModal'
-import ChatPanel from './ChatPanel'
 
 const DIFFICULTY_ORDER: Difficulty[] = ['Beginner', 'Intermediate', 'Advanced', 'Expert']
 
@@ -19,13 +18,13 @@ const DIFFICULTY_COLORS: Record<Difficulty, { bg: string; color: string }> = {
   Expert:       { bg: '#FCE4EC', color: '#880E4F' },
 }
 
-type View = 'list' | 'breakdown' | 'enter'
+type View = 'list' | 'enter'
 type ListFilter = 'all' | 'mine'
 
 export default function App() {
+  const router = useRouter()
   const [view, setView] = useState<View>('list')
   const [sentences, setSentences] = useState<Sentence[]>([])
-  const [sentence, setSentence] = useState<Sentence | null>(null)
   const [listFilter, setListFilter] = useState<ListFilter>('all')
   const [langFilter, setLangFilter] = useState<string>('all')
   const [inputLang, setInputLang] = useState<string>(LANGUAGES[0].code)
@@ -34,10 +33,8 @@ export default function App() {
   const [error, setError] = useState<string | null>(null)
   const [user, setUser] = useState<User | null>(null)
   const [showAuth, setShowAuth] = useState(false)
-  const [saved, setSaved] = useState(false)
   const [savedList, setSavedList] = useState<Sentence[]>([])
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
-  const [userTagsMap, setUserTagsMap] = useState<Record<string, string[]>>({})
 
   useEffect(() => {
     loadSentences()
@@ -70,30 +67,6 @@ export default function App() {
       const list = data.map((r: any) => r.sentences as Sentence)
       setSavedList(list)
       setSavedIds(new Set(list.map(s => s.id)))
-      const tagsMap: Record<string, string[]> = {}
-      data.forEach((r: any) => { tagsMap[r.sentences.id] = r.user_tags ?? [] })
-      setUserTagsMap(tagsMap)
-    }
-  }
-
-  async function updateUserTags(sentenceId: string, tags: string[]) {
-    await supabase
-      .from('saved_sentences')
-      .update({ user_tags: tags })
-      .eq('user_id', user!.id)
-      .eq('sentence_id', sentenceId)
-    setUserTagsMap(m => ({ ...m, [sentenceId]: tags }))
-  }
-
-  async function saveSentence() {
-    if (!sentence) return
-    if (!user) { setShowAuth(true); return }
-    const { error } = await supabase
-      .from('saved_sentences')
-      .insert({ user_id: user.id, sentence_id: sentence.id })
-    if (!error) {
-      setSaved(true)
-      setSavedIds(ids => new Set([...ids, sentence.id]))
     }
   }
 
@@ -109,21 +82,16 @@ export default function App() {
       })
       if (!res.ok) throw new Error('Failed')
       const data = await res.json()
-      setSentence(data)
-      // Auto-save to Mine if signed in
       if (user) {
         await supabase
           .from('saved_sentences')
           .insert({ user_id: user.id, sentence_id: data.id })
           .select()
-        setSaved(true)
         setSavedIds(ids => new Set([...ids, data.id]))
         await loadSaved()
-      } else {
-        setSaved(false)
       }
-      setView('breakdown')
       setInput('')
+      router.push('/sentences/' + data.id)
     } catch {
       setError('Something went wrong. Please try again.')
     } finally {
@@ -132,17 +100,7 @@ export default function App() {
   }
 
   function openSentence(s: Sentence) {
-    setSentence(s)
-    setSaved(savedIds.has(s.id))
-    setView('breakdown')
-  }
-
-  function openNextSentence() {
-    if (!sentence) return
-    const list = langFilter === 'all' ? sentences : sentences.filter(s => s.language === langFilter)
-    const idx = list.findIndex(s => s.id === sentence.id)
-    const next = list[idx + 1] ?? list[0]
-    if (next && next.id !== sentence.id) openSentence(next)
+    router.push('/sentences/' + s.id)
   }
 
   const visibleSentences = langFilter === 'all'
@@ -154,8 +112,6 @@ export default function App() {
     if (group.length > 0) acc[d] = group
     return acc
   }, {} as Partial<Record<Difficulty, Sentence[]>>)
-
-  const activeLangs = [...new Set(sentences.map(s => s.language))]
 
   return (
     <>
@@ -171,7 +127,7 @@ export default function App() {
           Ms. Gramm
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          {view !== 'list' && (
+          {view === 'enter' && (
             <button onClick={() => setView('list')} style={navBtn}>← Sentences</button>
           )}
           {view !== 'enter' && (
@@ -263,19 +219,6 @@ export default function App() {
               )
             )}
           </div>
-        )}
-
-        {/* Breakdown view */}
-        {view === 'breakdown' && sentence && (
-          <>
-            <Breakdown
-              sentence={sentence}
-              userTags={saved ? (userTagsMap[sentence.id] ?? []) : undefined}
-              onUserTagsChange={saved ? (tags) => updateUserTags(sentence.id, tags) : undefined}
-              onNextSentence={openNextSentence}
-            />
-            <ChatPanel sentence={sentence} userId={user?.id} />
-          </>
         )}
 
         {/* Enter view */}
