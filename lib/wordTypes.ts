@@ -12,6 +12,9 @@ export const BADGE_COLORS: Record<string, { bg: string; color: string }> = {
   'Negation':             { bg: '#F5EEEE', color: '#6B2020' },
   'Pointing word':        { bg: '#EEEEF8', color: '#3A3A7A' },
   'Time word':            { bg: '#EEF7F0', color: '#1A5C2A' },
+  'Conjunction':          { bg: '#F0EEF8', color: '#4A3A7A' },
+  'Adverb':               { bg: '#EEF8F8', color: '#1A5C5C' },
+  'Adjective':            { bg: '#FFF0F5', color: '#8B2252' },
 }
 
 export const HIGHLIGHT_COLORS: Record<string, { bg: string; color: string }> = {
@@ -28,6 +31,9 @@ export const HIGHLIGHT_COLORS: Record<string, { bg: string; color: string }> = {
   'Negation':             { bg: '#DDAAAA', color: '#4A1010' },
   'Pointing word':        { bg: '#C0C4E8', color: '#20204A' },
   'Time word':            { bg: '#A8D8B0', color: '#1A3A20' },
+  'Conjunction':          { bg: '#C0BAE8', color: '#251050' },
+  'Adverb':               { bg: '#A8D8D8', color: '#0A3A3A' },
+  'Adjective':            { bg: '#F0A0C0', color: '#5A0A30' },
 }
 
 export const GLOSSARY: Record<string, string> = {
@@ -44,4 +50,7 @@ export const GLOSSARY: Record<string, string> = {
   'Negation': 'Reverses or denies the action.',
   'Pointing word': 'Points to something already understood in context.',
   'Time word': 'Anchors the action in time.',
+  'Conjunction': 'Connects two clauses or words — and, but, or.',
+  'Adverb': 'Modifies a verb or adjective — changes its degree or manner.',
+  'Adjective': 'Describes a noun — tells you what it is like.',
 }

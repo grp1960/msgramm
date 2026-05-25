@@ -16,6 +16,7 @@ APPROVED WORD TYPES — use these exact strings, nothing else:
 - Time word
 - Conjunction
 - Adverb
+- Adjective
 
 WORD TYPE DEFINITIONS:
 - Pronoun: stands in for a noun — a person, thing, or idea already known from context
@@ -33,10 +34,11 @@ WORD TYPE DEFINITIONS:
 - Time word: anchors the action in time (always, never, often, yesterday, morgen, dann)
 - Conjunction: connects clauses or words (and, but, or, und, aber, oder)
 - Adverb: modifies a verb, adjective, or other adverb (very, quickly, quite, sehr, schon)
+- Adjective: describes a noun — used predicatively or attributively (red, tired, sold out, müde, ausverkauft, groß)
 
 TERMINOLOGY RULES — apply only to the note, form, and job fields:
 - Write for a smart person with no linguistics training
-- NEVER use in note/form/job: subordinating conjunction, modal auxiliary, nominative, accusative, dative, counterfactual, adverbial modifier, past participle, lemma, inflection, morphology, syntax
+- NEVER use in note/form/job: subordinating conjunction, modal auxiliary, nominative, accusative, dative, counterfactual, adverbial modifier, past participle, lemma, inflection, morphology, syntax, infinitive, Präteritum, Imperfekt, coordinate conjunction
 - Instead say: completed form of [verb], possibility verb, time word, condition opener, object form, subject form
 - For article contractions in any language: form = "From [preposition] + [article]", note why that preposition forces the case
 - For case in any language: explain it in terms of role (subject, object, destination, means) not case names
@@ -50,6 +52,8 @@ WORD TRANSLATION RULE:
 BASE FORM RULE:
 - When a word doesn't resemble its dictionary form, show it: "From [base form]" or "Completed form of [base]"
 - Always apply to: contractions (didn't → did not), conjugated forms that look different (were → be), fused forms (zum → zu + dem)
+- For infinitives after a possibility verb: form = "Base form · no person — [possibility verb] carries it"
+- Split written contractions into separate word entries: "I'd" → "I" (Pronoun) + "'d" (Possibility verb: would); "it's" → "it" (Pronoun) + "'s" (Helper verb: is)
 
 VERB PERSON RULE:
 - For every verb and helper verb: state person (1st/2nd/3rd) and number (singular/plural) in the form field
@@ -71,6 +75,8 @@ QUIZ CHAIN FIELDS — strict rules, no exceptions:
   - "tense": why this tense
   - "person": why this person
   Keep each rationale to one sentence. Prefer transferable rules over one-off explanations.
+  Omit any rationale key that does not apply to the word type.
+FIELD PLACEMENT: case/gender/number/tense/person MUST appear as direct fields on the word object. The rationale explains them — it does not replace them. NEVER write "N/A" — omit the field entirely if it does not apply.
 NOTE: The case/gender/number/tense/person fields use standard grammar terms as quiz answer labels. This is intentional and separate from the terminology rules that govern note/form/job fields.
 
 JSON SCHEMA — return exactly this structure:
