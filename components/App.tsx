@@ -8,6 +8,7 @@ import { LANGUAGES } from '@/lib/languages'
 import type { User } from '@supabase/supabase-js'
 import Link from 'next/link'
 import AuthModal from './AuthModal'
+import FeedbackModal from './FeedbackModal'
 
 const DIFFICULTY_ORDER: Difficulty[] = ['Beginner', 'Intermediate', 'Advanced', 'Expert']
 
@@ -35,6 +36,7 @@ export default function App() {
   const [showAuth, setShowAuth] = useState(false)
   const [savedList, setSavedList] = useState<Sentence[]>([])
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
+  const [showFeedback, setShowFeedback] = useState(false)
 
   useEffect(() => {
     loadSentences()
@@ -122,6 +124,9 @@ export default function App() {
   return (
     <>
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+      {showFeedback && (
+        <FeedbackModal scope="general" userId={user?.id} userEmail={user?.email} onClose={() => setShowFeedback(false)} />
+      )}
 
       {/* Nav */}
       <nav style={{
@@ -140,6 +145,7 @@ export default function App() {
             <button onClick={() => setView('enter')} style={navBtn}>Enter a sentence</button>
           )}
           <Link href="/topics" style={navBtn}>Topics</Link>
+          <button onClick={() => setShowFeedback(true)} style={navBtn}>Feedback</button>
           {user ? (
             <button onClick={() => supabase.auth.signOut()} style={navBtn}>Sign out</button>
           ) : (

@@ -8,12 +8,14 @@ import type { User } from '@supabase/supabase-js'
 import Breakdown from './Breakdown'
 import ChatPanel from './ChatPanel'
 import AuthModal from './AuthModal'
+import FeedbackModal, { FeedbackScope } from './FeedbackModal'
 
 export default function SentencePage({ sentence }: { sentence: Sentence }) {
   const [user, setUser] = useState<User | null>(null)
   const [saved, setSaved] = useState(false)
   const [userTags, setUserTags] = useState<string[]>([])
-  const [showAuth, setShowAuth] = useState(false) // for Sign in button
+  const [showAuth, setShowAuth] = useState(false)
+  const [feedbackScope, setFeedbackScope] = useState<FeedbackScope | null>(null)
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user))
@@ -54,6 +56,15 @@ export default function SentencePage({ sentence }: { sentence: Sentence }) {
   return (
     <>
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+      {feedbackScope && (
+        <FeedbackModal
+          scope={feedbackScope}
+          sentenceId={feedbackScope === 'sentence' ? sentence.id : undefined}
+          userId={user?.id}
+          userEmail={user?.email}
+          onClose={() => setFeedbackScope(null)}
+        />
+      )}
 
       <nav style={{
         background: '#16324F', padding: '0 48px',
@@ -66,6 +77,7 @@ export default function SentencePage({ sentence }: { sentence: Sentence }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <Link href="/" style={navBtn}>← Sentences</Link>
           <Link href="/topics" style={navBtn}>Topics</Link>
+          <button onClick={() => setFeedbackScope('general')} style={navBtn}>Feedback</button>
           {user ? (
             <button onClick={() => supabase.auth.signOut()} style={navBtn}>Sign out</button>
           ) : (
@@ -82,6 +94,14 @@ export default function SentencePage({ sentence }: { sentence: Sentence }) {
           userTags={saved ? userTags : undefined}
           onUserTagsChange={saved ? updateUserTags : undefined}
         />
+        <div style={{ marginTop: 12 }}>
+          <button
+            onClick={() => setFeedbackScope('sentence')}
+            style={{ fontSize: '0.75rem', color: '#AAA', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+          >
+            Report an issue with this sentence
+          </button>
+        </div>
         <ChatPanel sentence={sentence} userId={user?.id} />
       </main>
     </>
