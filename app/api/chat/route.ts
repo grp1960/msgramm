@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 import { createClient } from '@supabase/supabase-js'
+import { withGuards, rateLimitGuard } from '@/lib/guards'
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
@@ -9,7 +10,9 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
 )
 
-export async function POST(req: NextRequest) {
+export const POST = withGuards(
+  rateLimitGuard({ limit: 100, windowSecs: 86400, keyPrefix: 'chat' }),
+)(async (req: NextRequest): Promise<NextResponse> => {
   const { messages, sentence, userId } = await req.json()
 
   // Fetch active system prompt from DB
@@ -72,4 +75,4 @@ export async function POST(req: NextRequest) {
       total_tokens: usage?.total_tokens ?? 0,
     },
   })
-}
+})
