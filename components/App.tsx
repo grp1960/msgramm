@@ -129,9 +129,9 @@ export default function App() {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         height: 48,
       }}>
-        <span style={{ fontFamily: 'Georgia, serif', color: 'white', fontSize: '1rem', fontWeight: 600, letterSpacing: '0.02em' }}>
+        <Link href="/" style={{ fontFamily: 'Georgia, serif', color: 'white', fontSize: '1rem', fontWeight: 600, letterSpacing: '0.02em', textDecoration: 'none' }}>
           Ms. Gramm
-        </span>
+        </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           {view === 'enter' && (
             <button onClick={() => setView('list')} style={navBtn}>← Sentences</button>

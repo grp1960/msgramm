@@ -60,9 +60,9 @@ export default function SentencePage({ sentence }: { sentence: Sentence }) {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         height: 48,
       }}>
-        <span style={{ fontFamily: 'Georgia, serif', color: 'white', fontSize: '1rem', fontWeight: 600, letterSpacing: '0.02em' }}>
+        <Link href="/" style={{ fontFamily: 'Georgia, serif', color: 'white', fontSize: '1rem', fontWeight: 600, letterSpacing: '0.02em', textDecoration: 'none' }}>
           Ms. Gramm
-        </span>
+        </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <Link href="/" style={navBtn}>← Sentences</Link>
           <Link href="/topics" style={navBtn}>Topics</Link>
