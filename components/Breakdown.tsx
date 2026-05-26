@@ -15,9 +15,10 @@ type Props = {
   userTags?: string[]
   onUserTagsChange?: (tags: string[]) => void
   onNextSentence?: () => void
+  onFeedback?: () => void
 }
 
-export default function Breakdown({ sentence, saved, onSave, saveLabel = 'Save', userTags, onUserTagsChange, onNextSentence }: Props) {
+export default function Breakdown({ sentence, saved, onSave, saveLabel = 'Save', userTags, onUserTagsChange, onNextSentence, onFeedback }: Props) {
   const [highlighted, setHighlighted] = useState<number | null>(null)
   const [activeFilter, setActiveFilter] = useState<string>('all')
   const [quizMode, setQuizMode] = useState(false)
@@ -116,6 +117,18 @@ export default function Breakdown({ sentence, saved, onSave, saveLabel = 'Save',
                 }}
               >
                 {showContext ? 'Hide paragraph' : 'In paragraph'}
+              </button>
+            )}
+            {onFeedback && (
+              <button
+                onClick={onFeedback}
+                style={{
+                  fontSize: '0.75rem', padding: '4px 14px', borderRadius: 20,
+                  border: '1px solid #e0b0b0', color: '#a04040', background: '#fff8f8',
+                  cursor: 'pointer',
+                }}
+              >
+                ⚑ Report an issue
               </button>
             )}
           </div>

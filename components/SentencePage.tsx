@@ -93,15 +93,8 @@ export default function SentencePage({ sentence }: { sentence: Sentence }) {
           sentence={sentence}
           userTags={saved ? userTags : undefined}
           onUserTagsChange={saved ? updateUserTags : undefined}
+          onFeedback={() => setFeedbackScope('sentence')}
         />
-        <div style={{ marginTop: 12 }}>
-          <button
-            onClick={() => setFeedbackScope('sentence')}
-            style={{ fontSize: '0.75rem', color: '#AAA', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-          >
-            Report an issue with this sentence
-          </button>
-        </div>
         <ChatPanel sentence={sentence} userId={user?.id} />
       </main>
     </>
