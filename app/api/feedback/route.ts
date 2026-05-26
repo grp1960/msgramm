@@ -2,14 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { withGuards, rateLimitGuard } from '@/lib/guards'
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
 export const POST = withGuards(
   rateLimitGuard({ limit: 20, windowSecs: 86400, keyPrefix: 'feedback' }),
 )(async (req: NextRequest): Promise<NextResponse> => {
+  // Client created at request time — service role key not available during build
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+
   const { scope, itemId, sentenceId, type, message, userId, email, mayFollowUp } = await req.json()
 
   if (!message?.trim()) {

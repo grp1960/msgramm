@@ -101,18 +101,20 @@ export interface RateLimitOptions {
  * Backed by Supabase by default; swap the store for any other backend.
  */
 export function rateLimitGuard(options: RateLimitOptions): Guard {
-  const {
-    limit,
-    windowSecs = 86400,
-    keyPrefix = 'rl',
-    keyBy = 'ip',
-    store = supabaseRateLimitStore(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    ),
-  } = options
+  const { limit, windowSecs = 86400, keyPrefix = 'rl', keyBy = 'ip', store: storeOption } = options
+
+  // Lazy: create the default store on first request, not at module load time.
+  // Avoids build-time failures when SUPABASE_SERVICE_ROLE_KEY is not set.
+  let store: RateLimitStore | null = storeOption ?? null
 
   return async (req, ctx) => {
+    if (!store) {
+      store = supabaseRateLimitStore(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      )
+    }
+
     const identifier =
       typeof keyBy === 'function' ? keyBy(req, ctx) : getIP(req)
 
