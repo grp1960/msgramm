@@ -80,7 +80,13 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sentence: input.trim(), language: inputLang }),
       })
-      if (!res.ok) throw new Error('Failed')
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        if (res.status === 422) {
+          throw new Error(body.message ?? "This doesn't look like a natural language sentence.")
+        }
+        throw new Error(body.error ?? 'Something went wrong. Please try again.')
+      }
       const data = await res.json()
       if (user) {
         await supabase
@@ -92,8 +98,8 @@ export default function App() {
       }
       setInput('')
       router.push('/sentences/' + data.id)
-    } catch {
-      setError('Something went wrong. Please try again.')
+    } catch (e: any) {
+      setError(e.message ?? 'Something went wrong. Please try again.')
     } finally {
       setLoading(false)
     }
