@@ -7,7 +7,6 @@ import WordEntry from './WordEntry'
 
 type Props = {
   sentence: Sentence
-  mode: 'study' | 'quiz'
   saved?: boolean
   onSave?: () => void
   userTags?: string[]
@@ -16,8 +15,9 @@ type Props = {
 }
 
 export default function Breakdown({
-  sentence, mode, saved, onSave, userTags, onUserTagsChange, onFeedback,
+  sentence, saved, onSave, userTags, onUserTagsChange, onFeedback,
 }: Props) {
+  const [mode, setMode] = useState<'study' | 'quiz'>('study')
   const [hoveredId, setHoveredId] = useState<number | null>(null)
   const [activeId, setActiveId] = useState<number | null>(null)
   const [filter, setFilter] = useState('all')
@@ -135,13 +135,6 @@ export default function Breakdown({
           {genders.length > 0 && <span><strong>{genders.length}</strong>&nbsp;genders</span>}
         </div>
         <div className="mg-plaque-actions">
-          <button
-            className="mg-action"
-            aria-pressed={showTranslation ? 'true' : 'false'}
-            onClick={() => setShowTranslation(v => !v)}
-          >
-            Translate
-          </button>
           {(sentence.ctx_before || sentence.ctx_after) && (
             <button
               className="mg-action"
@@ -151,13 +144,6 @@ export default function Breakdown({
               In paragraph
             </button>
           )}
-          <button
-            className="mg-action"
-            aria-pressed={showPeek ? 'true' : 'false'}
-            onClick={() => setShowPeek(v => !v)}
-          >
-            Peek
-          </button>
           {onSave !== undefined && (
             <button
               className="mg-action"
@@ -173,6 +159,42 @@ export default function Breakdown({
               Report
             </button>
           )}
+        </div>
+      </div>
+
+      {/* ── Controls row: mode + translate ── */}
+      <div className="mg-controls-row">
+        <div className="mg-mode-toggle">
+          <button
+            aria-pressed={mode === 'study' ? 'true' : 'false'}
+            onClick={() => setMode('study')}
+          >
+            Study
+          </button>
+          <button
+            aria-pressed={mode === 'quiz' ? 'true' : 'false'}
+            onClick={() => setMode('quiz')}
+          >
+            Quiz
+          </button>
+        </div>
+        <div style={{ display: 'flex', gap: 4 }}>
+          <div className="mg-mode-toggle">
+            <button
+              aria-pressed={showTranslation ? 'true' : 'false'}
+              onClick={() => setShowTranslation(v => !v)}
+            >
+              Translate
+            </button>
+          </div>
+          <div className="mg-mode-toggle">
+            <button
+              aria-pressed={showPeek ? 'true' : 'false'}
+              onClick={() => setShowPeek(v => !v)}
+            >
+              Peek
+            </button>
+          </div>
         </div>
       </div>
 

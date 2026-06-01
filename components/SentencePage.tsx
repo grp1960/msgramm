@@ -16,7 +16,6 @@ export default function SentencePage({ sentence }: { sentence: Sentence }) {
   const [userTags, setUserTags] = useState<string[]>([])
   const [showAuth, setShowAuth] = useState(false)
   const [feedbackScope, setFeedbackScope] = useState<FeedbackScope | null>(null)
-  const [mode, setMode] = useState<'study' | 'quiz'>('study')
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user))
@@ -88,40 +87,19 @@ export default function SentencePage({ sentence }: { sentence: Sentence }) {
               Feedback
             </button>
             {user ? (
-              <button
-                onClick={() => supabase.auth.signOut()}
-                style={{ ...monoNavLink, background: 'transparent', border: 0, cursor: 'pointer' }}
-              >
+              <button onClick={() => supabase.auth.signOut()} style={{ ...monoNavLink, background: 'transparent', border: 0, cursor: 'pointer' }}>
                 Sign out
               </button>
             ) : (
-              <button
-                onClick={() => setShowAuth(true)}
-                style={{ ...monoNavLink, background: 'transparent', border: 0, cursor: 'pointer' }}
-              >
+              <button onClick={() => setShowAuth(true)} style={{ ...monoNavLink, background: 'transparent', border: 0, cursor: 'pointer' }}>
                 Sign in
               </button>
             )}
-            <div className="mg-mode-toggle">
-              <button
-                aria-pressed={mode === 'study' ? 'true' : 'false'}
-                onClick={() => setMode('study')}
-              >
-                Study
-              </button>
-              <button
-                aria-pressed={mode === 'quiz' ? 'true' : 'false'}
-                onClick={() => setMode('quiz')}
-              >
-                Quiz
-              </button>
-            </div>
           </div>
         </header>
 
         <Breakdown
           sentence={sentence}
-          mode={mode}
           saved={saved}
           onSave={user ? handleSave : undefined}
           userTags={saved ? userTags : undefined}
