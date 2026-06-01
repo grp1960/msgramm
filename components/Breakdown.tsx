@@ -25,6 +25,7 @@ export default function Breakdown({
   const [showContext, setShowContext] = useState(false)
   const [showPeek, setShowPeek] = useState(false)
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null)
+  const [showLexicon, setShowLexicon] = useState(true)
   const [revealed, setRevealed] = useState<Record<string, boolean>>({})
   const [topicByType, setTopicByType] = useState<Record<string, string>>({})
   const activeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -221,27 +222,46 @@ export default function Breakdown({
             </button>
           )
         })}
+        <button
+          onClick={() => setShowLexicon(v => !v)}
+          style={{
+            marginLeft: 'auto',
+            fontFamily: 'var(--mono)',
+            fontSize: 'var(--t-mono-xs)',
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            color: 'var(--ink-40)',
+            background: 'transparent',
+            border: 0,
+            cursor: 'pointer',
+            padding: '6px 0',
+          }}
+        >
+          {showLexicon ? '↑ Collapse' : '↓ Expand'}
+        </button>
       </div>
 
       {/* ── Lexicon ── */}
-      <div className="mg-entries">
-        {filtered.map(w => (
-          <div key={w.wid} id={`entry-${w.wid}`}>
-            <WordEntry
-              entry={w}
-              mode={mode}
-              isHovered={hoveredId === w.wid}
-              isActive={activeId === w.wid}
-              revealed={revealed}
-              topicSlug={topicByType[w.type]}
-              onMouseEnter={() => setHoveredId(w.wid)}
-              onMouseLeave={() => setHoveredId(null)}
-              onReveal={toggleReveal}
-              onRevealAll={() => revealAll(w.wid)}
-            />
-          </div>
-        ))}
-      </div>
+      {showLexicon && (
+        <div className="mg-entries">
+          {filtered.map(w => (
+            <div key={w.wid} id={`entry-${w.wid}`}>
+              <WordEntry
+                entry={w}
+                mode={mode}
+                isHovered={hoveredId === w.wid}
+                isActive={activeId === w.wid}
+                revealed={revealed}
+                topicSlug={topicByType[w.type]}
+                onMouseEnter={() => setHoveredId(w.wid)}
+                onMouseLeave={() => setHoveredId(null)}
+                onReveal={toggleReveal}
+                onRevealAll={() => revealAll(w.wid)}
+              />
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* ── Insight Band ── */}
       {explanation && (
