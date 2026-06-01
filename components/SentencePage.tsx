@@ -16,6 +16,7 @@ export default function SentencePage({ sentence }: { sentence: Sentence }) {
   const [userTags, setUserTags] = useState<string[]>([])
   const [showAuth, setShowAuth] = useState(false)
   const [feedbackScope, setFeedbackScope] = useState<FeedbackScope | null>(null)
+  const [mode, setMode] = useState<'study' | 'quiz'>('study')
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user))
@@ -34,15 +35,16 @@ export default function SentencePage({ sentence }: { sentence: Sentence }) {
       .eq('sentence_id', sentence.id)
       .single()
       .then(({ data }) => {
-        if (data) {
-          setSaved(true)
-          setUserTags(data.user_tags ?? [])
-        } else {
-          setSaved(false)
-          setUserTags([])
-        }
+        if (data) { setSaved(true); setUserTags(data.user_tags ?? []) }
+        else { setSaved(false); setUserTags([]) }
       })
   }, [user, sentence.id])
+
+  async function handleSave() {
+    if (!user || saved) return
+    await supabase.from('saved_sentences').insert({ user_id: user.id, sentence_id: sentence.id, user_tags: [] })
+    setSaved(true)
+  }
 
   async function updateUserTags(tags: string[]) {
     await supabase
@@ -52,6 +54,8 @@ export default function SentencePage({ sentence }: { sentence: Sentence }) {
       .eq('sentence_id', sentence.id)
     setUserTags(tags)
   }
+
+  const wordCount = sentence.breakdown.words.length
 
   return (
     <>
@@ -66,43 +70,76 @@ export default function SentencePage({ sentence }: { sentence: Sentence }) {
         />
       )}
 
-      <nav style={{
-        background: '#16324F', padding: '0 48px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        height: 48,
-      }}>
-        <Link href="/" style={{ fontFamily: 'Georgia, serif', color: 'white', fontSize: '1rem', fontWeight: 600, letterSpacing: '0.02em', textDecoration: 'none' }}>
-          Ms. Gramm
-        </Link>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Link href="/" style={navBtn}>← Sentences</Link>
-          <Link href="/topics" style={navBtn}>Topics</Link>
-          <button onClick={() => setFeedbackScope('general')} style={navBtn}>Feedback</button>
-          {user ? (
-            <button onClick={() => supabase.auth.signOut()} style={navBtn}>Sign out</button>
-          ) : (
-            <button onClick={() => setShowAuth(true)} style={{ ...navBtn, borderColor: 'rgba(255,255,255,0.6)', color: 'white' }}>
-              Sign in
-            </button>
-          )}
-        </div>
-      </nav>
+      <div className="mg-shell">
+        <header className="mg-header">
+          <Link href="/" className="mg-wordmark">
+            Ms<span className="dot" />Gramm
+          </Link>
 
-      <main style={{ maxWidth: 860, padding: '40px 48px' }}>
+          <div className="mg-header-meta">
+            <span>{sentence.language}</span>
+            <span>{wordCount}&nbsp;words</span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <Link href="/" style={monoNavLink}>← Sentences</Link>
+            <Link href="/topics" style={monoNavLink}>Topics</Link>
+            <button onClick={() => setFeedbackScope('general')} style={{ ...monoNavLink, background: 'transparent', border: 0, cursor: 'pointer' }}>
+              Feedback
+            </button>
+            {user ? (
+              <button
+                onClick={() => supabase.auth.signOut()}
+                style={{ ...monoNavLink, background: 'transparent', border: 0, cursor: 'pointer' }}
+              >
+                Sign out
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowAuth(true)}
+                style={{ ...monoNavLink, background: 'transparent', border: 0, cursor: 'pointer' }}
+              >
+                Sign in
+              </button>
+            )}
+            <div className="mg-mode-toggle">
+              <button
+                aria-pressed={mode === 'study' ? 'true' : 'false'}
+                onClick={() => setMode('study')}
+              >
+                Study
+              </button>
+              <button
+                aria-pressed={mode === 'quiz' ? 'true' : 'false'}
+                onClick={() => setMode('quiz')}
+              >
+                Quiz
+              </button>
+            </div>
+          </div>
+        </header>
+
         <Breakdown
           sentence={sentence}
+          mode={mode}
+          saved={saved}
+          onSave={user ? handleSave : undefined}
           userTags={saved ? userTags : undefined}
           onUserTagsChange={saved ? updateUserTags : undefined}
           onFeedback={() => setFeedbackScope('sentence')}
         />
-        <ChatPanel sentence={sentence} userId={user?.id} />
-      </main>
+      </div>
+
+      <ChatPanel sentence={sentence} userId={user?.id} />
     </>
   )
 }
 
-const navBtn: React.CSSProperties = {
-  fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', background: 'transparent',
-  border: '1px solid rgba(255,255,255,0.3)', borderRadius: 20,
-  padding: '4px 14px', cursor: 'pointer', textDecoration: 'none',
+const monoNavLink: React.CSSProperties = {
+  fontFamily: 'var(--mono)',
+  fontSize: '11px',
+  letterSpacing: '0.08em',
+  textTransform: 'uppercase',
+  color: 'var(--ink-60)',
+  textDecoration: 'none',
 }

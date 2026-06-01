@@ -1,29 +1,31 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Sentence, Topic } from '@/lib/types'
 import { supabase } from '@/lib/supabase'
-import { BADGE_COLORS, HIGHLIGHT_COLORS } from '@/lib/wordTypes'
 import WordEntry from './WordEntry'
-import QuizMode from './QuizMode'
 
 type Props = {
   sentence: Sentence
+  mode: 'study' | 'quiz'
   saved?: boolean
   onSave?: () => void
-  saveLabel?: string
   userTags?: string[]
   onUserTagsChange?: (tags: string[]) => void
-  onNextSentence?: () => void
   onFeedback?: () => void
 }
 
-export default function Breakdown({ sentence, saved, onSave, saveLabel = 'Save', userTags, onUserTagsChange, onNextSentence, onFeedback }: Props) {
-  const [highlighted, setHighlighted] = useState<number | null>(null)
-  const [activeFilter, setActiveFilter] = useState<string>('all')
-  const [quizMode, setQuizMode] = useState(false)
+export default function Breakdown({
+  sentence, mode, saved, onSave, userTags, onUserTagsChange, onFeedback,
+}: Props) {
+  const [hoveredId, setHoveredId] = useState<number | null>(null)
+  const [activeId, setActiveId] = useState<number | null>(null)
+  const [filter, setFilter] = useState('all')
+  const [showTranslation, setShowTranslation] = useState(true)
   const [showContext, setShowContext] = useState(false)
+  const [revealed, setRevealed] = useState<Record<string, boolean>>({})
   const [topicByType, setTopicByType] = useState<Record<string, string>>({})
+  const activeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     supabase.from('topics').select('slug, word_type').not('word_type', 'is', null)
@@ -35,264 +37,213 @@ export default function Breakdown({ sentence, saved, onSave, saveLabel = 'Save',
       })
   }, [])
 
+  useEffect(() => { setRevealed({}) }, [mode])
+
   const { words, translation, explanation, trap } = sentence.breakdown
   const types = [...new Set(words.map(w => w.type))]
-  const filtered = activeFilter === 'all' ? words : words.filter(w => w.type === activeFilter)
+  const cases = [...new Set(words.map(w => w.case).filter(Boolean))]
+  const genders = [...new Set(words.map(w => w.gender).filter(Boolean))]
+
+  function handleWordClick(wid: number) {
+    setActiveId(wid)
+    if (activeTimer.current) clearTimeout(activeTimer.current)
+    activeTimer.current = setTimeout(() => setActiveId(null), 1400)
+    const el = document.getElementById(`entry-${wid}`)
+    if (el) {
+      const top = el.getBoundingClientRect().top + window.scrollY - 80
+      window.scrollTo({ top, behavior: 'smooth' })
+    }
+  }
+
+  function toggleReveal(key: string) {
+    setRevealed(prev => ({ ...prev, [key]: true }))
+  }
+
+  function revealAll(wid: number) {
+    const word = words.find(w => w.wid === wid)
+    if (!word) return
+    const keys: string[] = [`${wid}.role`]
+    const propFields = ['case', 'gender', 'number', 'tense', 'person'] as const
+    propFields.forEach(k => { if (word[k]) keys.push(`${wid}.${k}`) })
+    setRevealed(prev => {
+      const next = { ...prev }
+      keys.forEach(k => { next[k] = true })
+      return next
+    })
+  }
+
+  const filtered = filter === 'all' ? words : words.filter(w => w.type === filter)
 
   return (
-    <div>
-
-      {/* ── Study mode: full sentence section ── */}
-      {!quizMode && (
-        <div style={{ marginBottom: 40, paddingBottom: 32, borderBottom: '1px solid #E8E4DC' }}>
-          <div style={{ fontFamily: 'Georgia, serif', fontSize: '1.25rem', lineHeight: 1.9, marginBottom: 16 }}>
-            {/* Foreign language line */}
-            <div>
-              {showContext && sentence.ctx_before && (
-                <span style={{ color: '#aaa' }}>{sentence.ctx_before} </span>
-              )}
-              <span style={{ color: '#1B3A5C', fontWeight: 600 }}>
-                {words.map((w, i) => {
-                  const hlColors = HIGHLIGHT_COLORS[w.type]
-                  const isHl = highlighted === w.wid
-                  return (
-                    <span key={w.wid}>
-                      <span style={{
-                        borderRadius: 3, padding: '0 2px', transition: 'background 0.15s',
-                        cursor: 'default',
-                        ...(isHl && hlColors ? { background: hlColors.bg, color: hlColors.color } : {}),
-                      }}>
-                        {w.word}
-                      </span>
-                      {i < words.length - 1 ? ' ' : ''}
-                    </span>
-                  )
-                })}
-                .
+    <>
+      {/* ── Specimen ── */}
+      <div className="mg-specimen-block">
+        <div className="mg-eyebrow">A sentence, broken down</div>
+        <p className="mg-specimen">
+          {words.map((w, i) => (
+            <span key={w.wid}>
+              <span
+                className="mg-word"
+                data-hovered={hoveredId === w.wid ? 'true' : undefined}
+                data-active={activeId === w.wid ? 'true' : undefined}
+                data-dim={filter !== 'all' && w.type !== filter ? 'true' : undefined}
+                onMouseEnter={() => setHoveredId(w.wid)}
+                onMouseLeave={() => setHoveredId(null)}
+                onClick={() => handleWordClick(w.wid)}
+              >
+                <span className="mg-word-num">{String(w.wid).padStart(2, '0')}</span>
+                {w.word}
               </span>
-              {showContext && sentence.ctx_after && (
-                <span style={{ color: '#aaa' }}> {sentence.ctx_after}</span>
-              )}
-            </div>
-            {/* Translation line */}
-            {showContext && (sentence.ctx_before_translation || translation || sentence.ctx_after_translation) && (
-              <div style={{ fontSize: '1rem', color: '#888', fontStyle: 'italic' }}>
-                {sentence.ctx_before_translation && (
-                  <span>{sentence.ctx_before_translation} </span>
-                )}
-                {translation && (
-                  <span style={{ color: '#555', fontWeight: 600, fontStyle: 'normal' }}>{translation}</span>
-                )}
-                {sentence.ctx_after_translation && (
-                  <span> {sentence.ctx_after_translation}</span>
-                )}
-              </div>
-            )}
-            {/* Translation line when no context shown */}
-            {!showContext && translation && (
-              <div style={{ fontSize: '1rem', color: '#888', fontStyle: 'italic' }}>{translation}</div>
-            )}
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 8 }}>
-            {onSave !== undefined && (
-              saved ? (
-                <span style={{ fontSize: '0.85rem', color: '#27ae60', fontWeight: 500 }}>✓ Saved</span>
-              ) : (
-                <button onClick={onSave} style={{
-                  fontSize: '0.85rem', padding: '6px 18px', borderRadius: 6,
-                  border: '1px solid #1B3A5C', color: '#1B3A5C', background: 'white',
-                  cursor: 'pointer',
-                }}>
-                  {saveLabel}
-                </button>
-              )
-            )}
-            {(sentence.ctx_before || sentence.ctx_after) && (
-              <button
-                onClick={() => setShowContext(v => !v)}
-                style={{
-                  fontSize: '0.75rem', padding: '4px 14px', borderRadius: 20,
-                  border: '1px solid #D8D4CC', color: '#888', background: 'white', cursor: 'pointer',
-                }}
-              >
-                {showContext ? 'Hide paragraph' : 'In paragraph'}
-              </button>
-            )}
-            {onFeedback && (
-              <button
-                onClick={onFeedback}
-                style={{
-                  fontSize: '0.75rem', padding: '4px 14px', borderRadius: 20,
-                  border: '1px solid #e0b0b0', color: '#a04040', background: '#fff8f8',
-                  cursor: 'pointer',
-                }}
-              >
-                ⚑ Report an issue
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ── Mode bar — always visible ── */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: quizMode ? 28 : 20 }}>
-
-        {/* Left: label in study / save+context in quiz */}
-        {!quizMode ? (
-          <h2 style={{ fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#999', margin: 0 }}>
-            Word by Word
-          </h2>
-        ) : (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            {onSave !== undefined && (
-              saved ? (
-                <span style={{ fontSize: '0.8rem', color: '#27ae60', fontWeight: 500 }}>✓ Saved</span>
-              ) : (
-                <button onClick={onSave} style={{
-                  fontSize: '0.78rem', padding: '5px 14px', borderRadius: 6,
-                  border: '1px solid #1B3A5C', color: '#1B3A5C', background: 'white', cursor: 'pointer',
-                }}>
-                  {saveLabel}
-                </button>
-              )
-            )}
-            {(sentence.ctx_before || sentence.ctx_after) && (
-              <button
-                onClick={() => setShowContext(v => !v)}
-                style={{
-                  fontSize: '0.72rem', padding: '4px 12px', borderRadius: 20,
-                  border: '1px solid #D8D4CC', color: '#888', background: 'white', cursor: 'pointer',
-                }}
-              >
-                {showContext ? 'Hide context' : 'Context'}
-              </button>
+              {i < words.length - 1 ? ' ' : ''}
+            </span>
+          ))}
+          .
+        </p>
+        {showTranslation && translation && (
+          <p className="mg-translation">&ldquo;{translation}&rdquo;</p>
+        )}
+        {showContext && (sentence.ctx_before || sentence.ctx_after) && (
+          <div className="mg-context">
+            {sentence.ctx_before && <span>{sentence.ctx_before} </span>}
+            <span className="focus">{sentence.text}</span>
+            {sentence.ctx_after && <span> {sentence.ctx_after}</span>}
+            {(sentence.ctx_before_translation || sentence.ctx_after_translation) && (
+              <span className="en">
+                {sentence.ctx_before_translation && `${sentence.ctx_before_translation} `}
+                {translation}
+                {sentence.ctx_after_translation && ` ${sentence.ctx_after_translation}`}
+              </span>
             )}
           </div>
         )}
+      </div>
 
-        {/* Right: Study / Quiz toggle */}
-        <div style={{ display: 'flex', borderRadius: 8, overflow: 'hidden', border: '1px solid #D8D4CC' }}>
-          {(['Study', 'Quiz'] as const).map(mode => (
+      {/* ── Plaque ── */}
+      <div className="mg-plaque">
+        <div className="mg-plaque-stats">
+          <span><strong>{sentence.language}</strong></span>
+          <span><strong>{words.length}</strong>&nbsp;words</span>
+          {cases.length > 0 && <span><strong>{cases.length}</strong>&nbsp;cases</span>}
+          {genders.length > 0 && <span><strong>{genders.length}</strong>&nbsp;genders</span>}
+        </div>
+        <div className="mg-plaque-actions">
+          <button
+            className="mg-action"
+            aria-pressed={showTranslation ? 'true' : 'false'}
+            onClick={() => setShowTranslation(v => !v)}
+          >
+            Translate
+          </button>
+          {(sentence.ctx_before || sentence.ctx_after) && (
             <button
-              key={mode}
-              onClick={() => setQuizMode(mode === 'Quiz')}
-              style={{
-                padding: '6px 18px', fontSize: '0.75rem', fontWeight: 500, cursor: 'pointer', border: 'none',
-                background: (mode === 'Quiz') === quizMode ? '#1B3A5C' : 'white',
-                color: (mode === 'Quiz') === quizMode ? 'white' : '#666',
-              }}
+              className="mg-action"
+              aria-pressed={showContext ? 'true' : 'false'}
+              onClick={() => setShowContext(v => !v)}
             >
-              {mode}
+              In paragraph
             </button>
-          ))}
+          )}
+          {onSave !== undefined && (
+            <button
+              className="mg-action"
+              aria-pressed={saved ? 'true' : 'false'}
+              onClick={saved ? undefined : onSave}
+              style={saved ? { cursor: 'default' } : undefined}
+            >
+              {saved ? 'Saved' : 'Save'}
+            </button>
+          )}
+          {onFeedback && (
+            <button className="mg-action" onClick={onFeedback}>
+              Report
+            </button>
+          )}
         </div>
       </div>
 
-      {/* ── Quiz mode ── */}
-      {quizMode && (
-        <QuizMode
-          sentence={sentence}
-          onNextSentence={onNextSentence}
-        />
+      {/* ── Filters ── */}
+      <div className="mg-filters">
+        <span className="mg-filters-label">Filter</span>
+        <button
+          className="mg-filter"
+          aria-pressed={filter === 'all' ? 'true' : 'false'}
+          onClick={() => setFilter('all')}
+        >
+          All
+        </button>
+        {types.map(type => {
+          const count = words.filter(w => w.type === type).length
+          return (
+            <button
+              key={type}
+              className="mg-filter"
+              aria-pressed={filter === type ? 'true' : 'false'}
+              onClick={() => setFilter(filter === type ? 'all' : type)}
+            >
+              {type}<span className="count">{count}</span>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* ── Lexicon ── */}
+      <div className="mg-entries">
+        {filtered.map(w => (
+          <div key={w.wid} id={`entry-${w.wid}`}>
+            <WordEntry
+              entry={w}
+              mode={mode}
+              isHovered={hoveredId === w.wid}
+              isActive={activeId === w.wid}
+              revealed={revealed}
+              topicSlug={topicByType[w.type]}
+              onMouseEnter={() => setHoveredId(w.wid)}
+              onMouseLeave={() => setHoveredId(null)}
+              onReveal={toggleReveal}
+              onRevealAll={() => revealAll(w.wid)}
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* ── Insight Band ── */}
+      {explanation && (
+        <div className="mg-insight">
+          <div className="mg-insight-eyebrow">The Pattern</div>
+          <p className="mg-insight-body">{explanation}</p>
+        </div>
       )}
 
-      {/* ── Study mode: filter chips + word grid + explanation + trap + tags ── */}
-      {!quizMode && (
-        <>
-          {/* Filter chips */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 24 }}>
-            <button
-              onClick={() => setActiveFilter('all')}
-              style={{
-                padding: '4px 14px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 500, cursor: 'pointer',
-                background: activeFilter === 'all' ? '#1B3A5C' : 'white',
-                color: activeFilter === 'all' ? 'white' : '#666',
-                border: `1px solid ${activeFilter === 'all' ? '#1B3A5C' : '#D8D4CC'}`,
-              }}
-            >
-              All
-            </button>
-            {types.map(type => {
-              const colors = BADGE_COLORS[type]
-              const active = activeFilter === type
-              return (
-                <button
-                  key={type}
-                  onClick={() => setActiveFilter(active ? 'all' : type)}
-                  style={{
-                    padding: '4px 14px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 500, cursor: 'pointer',
-                    background: active ? colors?.color ?? '#555' : colors?.bg ?? '#EEE',
-                    color: active ? 'white' : colors?.color ?? '#333',
-                    border: `1px solid ${colors?.color ?? '#CCC'}`,
-                  }}
-                >
-                  {type}
-                </button>
-              )
-            })}
-          </div>
+      {/* ── Grammar Trap ── */}
+      {trap && (
+        <div className="mg-trap">
+          <div className="mg-trap-eyebrow">Grammar Trap</div>
+          <p className="mg-trap-body">{trap}</p>
+        </div>
+      )}
 
-          {/* Word grid — newspaper 2-column */}
-          <div style={{ columns: 2, columnGap: 16, columnFill: 'balance', marginBottom: 40 }}>
-            {filtered.map(entry => (
-              <div key={entry.wid} style={{ breakInside: 'avoid', marginBottom: 16 }}>
-                <WordEntry
-                  entry={entry}
-                  highlighted={highlighted === entry.wid}
-                  quizMode={false}
-                  topicSlug={topicByType[entry.type]}
-                  onMouseEnter={() => setHighlighted(entry.wid)}
-                  onMouseLeave={() => setHighlighted(null)}
-                />
+      {/* ── Tags ── */}
+      {(sentence.tags?.length > 0 || onUserTagsChange !== undefined) && (
+        <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap', marginTop: 48, paddingTop: 32, borderTop: 'var(--border-rule)' }}>
+          {sentence.tags?.length > 0 && (
+            <div>
+              <div style={tagLabel}>Tags</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {sentence.tags.map(t => (
+                  <span key={t} style={tagChip}>#{t}</span>
+                ))}
               </div>
-            ))}
-          </div>
-
-          {/* Explanation */}
-          <div style={{ borderRadius: 8, padding: '20px 24px', marginBottom: 16, background: '#F0F4F8', borderLeft: '4px solid #1B3A5C' }}>
-            <div style={{ fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#1B3A5C', marginBottom: 10 }}>
-              Explanation
-            </div>
-            <p style={{ fontSize: '0.875rem', lineHeight: 1.7, color: '#444' }}>{explanation}</p>
-          </div>
-
-          {/* Grammar Trap */}
-          <div style={{ borderRadius: 8, padding: '20px 24px', marginBottom: 24, background: '#FEF9E7', borderLeft: '4px solid #8B5E00' }}>
-            <div style={{ fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#8B5E00', marginBottom: 10 }}>
-              Grammar Trap
-            </div>
-            <p style={{ fontSize: '0.875rem', lineHeight: 1.7, color: '#444' }}>{trap}</p>
-          </div>
-
-          {/* Tags */}
-          {(sentence.tags?.length > 0 || onUserTagsChange !== undefined) && (
-            <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
-
-              {sentence.tags?.length > 0 && (
-                <div style={{ flex: 1, minWidth: 200 }}>
-                  <div style={tagLabel}>Tags</div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                    {sentence.tags.map(t => (
-                      <span key={t} style={gptTag}>#{t}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {onUserTagsChange !== undefined && (
-                <div style={{ flex: 1, minWidth: 200 }}>
-                  <div style={tagLabel}>My tags</div>
-                  <UserTags tags={userTags ?? []} onChange={onUserTagsChange} />
-                </div>
-              )}
-
             </div>
           )}
-        </>
+          {onUserTagsChange !== undefined && (
+            <div>
+              <div style={tagLabel}>My tags</div>
+              <UserTags tags={userTags ?? []} onChange={onUserTagsChange} />
+            </div>
+          )}
+        </div>
       )}
-
-    </div>
+    </>
   )
 }
 
@@ -306,17 +257,18 @@ function UserTags({ tags, onChange }: { tags: string[]; onChange: (tags: string[
     setInput('')
   }
 
-  function remove(t: string) {
-    onChange(tags.filter(x => x !== t))
-  }
-
   return (
     <div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
         {tags.map(t => (
-          <span key={t} style={{ ...userTag, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+          <span key={t} style={{ ...tagChip, display: 'inline-flex', alignItems: 'center', gap: 4, background: 'var(--bone-d)' }}>
             #{t}
-            <button onClick={() => remove(t)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#666', fontSize: '0.75rem', padding: 0, lineHeight: 1 }}>×</button>
+            <button
+              onClick={() => onChange(tags.filter(x => x !== t))}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-60)', fontSize: '0.75rem', padding: 0, lineHeight: 1 }}
+            >
+              ×
+            </button>
           </span>
         ))}
       </div>
@@ -327,14 +279,19 @@ function UserTags({ tags, onChange }: { tags: string[]; onChange: (tags: string[
           onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); add() } }}
           placeholder="Add a tag…"
           style={{
-            fontSize: '0.8rem', padding: '4px 10px', borderRadius: 6,
-            border: '1px solid #D8D4CC', outline: 'none', width: 140,
+            fontFamily: 'var(--mono)', fontSize: '12px', padding: '5px 10px',
+            border: 'var(--border-hair)', background: 'var(--white)', outline: 'none', width: 140,
+            color: 'var(--ink)',
           }}
         />
-        <button onClick={add} style={{
-          fontSize: '0.8rem', padding: '4px 12px', borderRadius: 6,
-          border: '1px solid #D8D4CC', background: 'white', cursor: 'pointer', color: '#555',
-        }}>
+        <button
+          onClick={add}
+          style={{
+            fontFamily: 'var(--mono)', fontSize: '12px', letterSpacing: '0.06em', textTransform: 'uppercase',
+            padding: '5px 12px', border: 'var(--border-hair)', background: 'transparent',
+            cursor: 'pointer', color: 'var(--ink-60)',
+          }}
+        >
           Add
         </button>
       </div>
@@ -343,16 +300,18 @@ function UserTags({ tags, onChange }: { tags: string[]; onChange: (tags: string[
 }
 
 const tagLabel: React.CSSProperties = {
-  fontSize: '0.65rem', fontWeight: 600, letterSpacing: '0.1em',
-  textTransform: 'uppercase', color: '#AAA', marginBottom: 8,
+  fontFamily: 'var(--mono)',
+  fontSize: '11px',
+  letterSpacing: '0.12em',
+  textTransform: 'uppercase',
+  color: 'var(--ink-40)',
+  marginBottom: 8,
 }
 
-const gptTag: React.CSSProperties = {
-  fontSize: '0.75rem', padding: '3px 10px', borderRadius: 20,
-  background: '#EEF2F7', color: '#4A6FA5', fontWeight: 500,
-}
-
-const userTag: React.CSSProperties = {
-  fontSize: '0.75rem', padding: '3px 10px', borderRadius: 20,
-  background: '#F0FFF4', color: '#2E7D4F', fontWeight: 500,
+const tagChip: React.CSSProperties = {
+  fontFamily: 'var(--mono)',
+  fontSize: '12px',
+  padding: '3px 10px',
+  background: 'var(--bone-d)',
+  color: 'var(--ink-60)',
 }

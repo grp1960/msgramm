@@ -9,17 +9,15 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body style={{ background: '#F7F5F0', minHeight: '100vh' }}>
-        <header style={{ background: '#1B3A5C', padding: '16px 48px', display: 'flex', alignItems: 'baseline', gap: 12 }}>
-          <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '1.5rem', color: 'white', letterSpacing: '0.05em' }}>
-            Ms. Gramm
-          </h1>
-          <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-            Sentence Breakdown
-          </span>
-        </header>
-        {children}
-      </body>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=JetBrains+Mono:wght@400;500&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body>{children}</body>
     </html>
   )
 }

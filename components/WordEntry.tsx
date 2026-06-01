@@ -1,167 +1,127 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
 import { WordEntry as WordEntryType } from '@/lib/types'
 
-type GrammarField = keyof WordEntryType
-import { BADGE_COLORS } from '@/lib/wordTypes'
-import Tooltip from './Tooltip'
-
+const PROP_FIELDS = ['case', 'gender', 'number', 'tense', 'person'] as const
+type PropField = typeof PROP_FIELDS[number]
 
 type Props = {
   entry: WordEntryType
-  highlighted: boolean
-  quizMode: boolean
+  mode: 'study' | 'quiz'
+  isHovered: boolean
+  isActive: boolean
+  revealed: Record<string, boolean>
   topicSlug?: string
   onMouseEnter: () => void
   onMouseLeave: () => void
+  onReveal: (key: string) => void
+  onRevealAll: () => void
 }
 
-export default function WordEntry({ entry, highlighted, quizMode, topicSlug, onMouseEnter, onMouseLeave }: Props) {
-  const colors = BADGE_COLORS[entry.type] ?? { bg: '#EEE', color: '#333' }
+export default function WordEntry({
+  entry, mode, isHovered, isActive, revealed, topicSlug,
+  onMouseEnter, onMouseLeave, onReveal, onRevealAll,
+}: Props) {
+  const props = PROP_FIELDS
+    .filter((k): k is PropField => entry[k] != null && entry[k] !== '')
+    .map(k => [k, entry[k] as string] as [string, string])
+
+  const roleKey = `${entry.wid}.role`
+  const roleRevealed = revealed[roleKey]
+  const allRevealed = (mode === 'study') ||
+    (roleRevealed && props.every(([k]) => revealed[`${entry.wid}.${k}`]))
 
   return (
     <div
-      className="rounded-lg p-3 border transition-colors"
-      style={{
-        background: highlighted ? '#F0F4F8' : 'white',
-        borderColor: highlighted ? '#2E6DA4' : '#E8E4DC',
-      }}
+      className="mg-entry"
+      data-active={isActive ? 'true' : undefined}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
-        <span className="text-xs text-gray-400 font-mono">{entry.wid}.</span>
-        <span className="font-semibold text-base" style={{ fontFamily: 'Georgia, serif', color: '#1B3A5C' }}>
-          {entry.word}
-        </span>
-        {!quizMode && (
-          <Tooltip type={entry.type} bg={colors.bg} color={colors.color}>
-            {entry.type}
-          </Tooltip>
-        )}
-        {!quizMode && entry.translation && (
-          <span style={{ fontSize: '0.8rem', color: '#888', fontStyle: 'italic' }}>
-            {entry.translation}
-          </span>
-        )}
-      </div>
+      {/* Number + POS */}
+      <div className="mg-entry-lead">
+        <div className="mg-entry-num">
+          {String(entry.wid).padStart(2, '0')}
+          <span className="pos">{entry.type}</span>
+        </div>
 
-      {!quizMode && (
-        <>
-          {entry.form && (
-            <div
-              className="text-xs text-gray-500 mt-1"
-              dangerouslySetInnerHTML={{ __html: italicise(entry.form) }}
-            />
-          )}
-          {entry.note && (
-            <div
-              className="text-xs text-gray-600 mt-1 leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: italicise(entry.note) }}
-            />
-          )}
-          <GrammarChips entry={entry} />
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 6 }}>
-            <div className="text-xs font-medium" style={{ color: '#1B3A5C' }}>
-              {entry.job}
-            </div>
-            {topicSlug && (
-              <Link href={`/topics/${topicSlug}`} style={{ fontSize: '0.7rem', color: '#4A6FA5', textDecoration: 'none', whiteSpace: 'nowrap', marginLeft: 8 }}>
-                Learn more →
-              </Link>
-            )}
-          </div>
-        </>
-      )}
-
-      {quizMode && <QuizChips entry={entry} />}
-    </div>
-  )
-}
-
-function italicise(text: string) {
-  return text.replace(/\*([^*]+)\*/g, '<em>$1</em>')
-}
-
-const GRAMMAR_FIELDS: Partial<Record<string, GrammarField[]>> = {
-  'Noun':               ['gender', 'case', 'number'],
-  'Pronoun':            ['gender', 'case'],
-  'Article':            ['gender', 'case'],
-  'Article contraction':['gender', 'case'],
-  'Verb':               ['tense', 'person'],
-  'Helper verb':        ['tense', 'person'],
-  'Possibility verb':   ['person'],
-}
-
-function GrammarChips({ entry }: { entry: WordEntryType }) {
-  const fields = GRAMMAR_FIELDS[entry.type] ?? []
-  const chips = fields.map(f => entry[f] as string | undefined).filter(Boolean)
-  if (!chips.length) return null
-  return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 6 }}>
-      {chips.map(chip => (
-        <span key={chip} style={{
-          fontSize: '0.65rem', padding: '1px 7px', borderRadius: 20,
-          background: '#EEF2F7', color: '#4A6FA5', fontWeight: 500,
-        }}>
-          {chip}
-        </span>
-      ))}
-    </div>
-  )
-}
-
-function getQuizOptions(correct: string): string[] {
-  const allTypes = Object.keys(BADGE_COLORS)
-  const pool = allTypes.filter(t => t !== correct)
-  const distractors = pool.sort(() => Math.random() - 0.5).slice(0, 3)
-  return [...distractors, correct].sort(() => Math.random() - 0.5)
-}
-
-function QuizChips({ entry }: { entry: WordEntryType }) {
-  const [answered, setAnswered] = useState<string | null>(null)
-  const [options] = useState(() => getQuizOptions(entry.type))
-  const colors = BADGE_COLORS[entry.type] ?? { bg: '#EEE', color: '#333' }
-
-  return (
-    <div className="mt-2">
-      <div className="flex flex-wrap gap-1.5">
-        {options.map(type => {
-          const c = BADGE_COLORS[type] ?? { bg: '#EEE', color: '#333' }
-          const isCorrect = type === entry.type
-          const isSelected = type === answered
-          let style: React.CSSProperties = { background: c.bg, color: c.color }
-          if (answered) {
-            if (isCorrect) style = { background: '#D4EDDA', color: '#155724', fontWeight: 600 }
-            else if (isSelected) style = { background: '#F8D7DA', color: '#721C24' }
-            else style = { ...style, opacity: 0.4 }
-          }
-          return (
-            <button
-              key={type}
-              disabled={!!answered}
-              onClick={() => setAnswered(type)}
-              className="px-2 py-0.5 rounded text-xs transition-all"
-              style={style}
-            >
-              {type}
-            </button>
-          )
-        })}
-      </div>
-      {answered && (
-        <div className="mt-2">
-          <Tooltip type={entry.type} bg={colors.bg} color={colors.color}>
-            {entry.type}
-          </Tooltip>
-          {entry.job && (
-            <div className="text-xs font-medium mt-1" style={{ color: '#1B3A5C' }}>
-              {entry.job}
-            </div>
+        {/* Headline: word + gloss */}
+        <div className="mg-entry-headline">
+          <p className="mg-entry-word">{entry.word}</p>
+          {entry.translation && (
+            <p className="mg-entry-gloss">&ldquo;{entry.translation}&rdquo;</p>
           )}
         </div>
+
+        {/* Lemma */}
+        {entry.form && (
+          <div className="mg-entry-lemma">
+            <span className="lem-key">Lemma</span>
+            {entry.form}
+          </div>
+        )}
+      </div>
+
+      {/* Property strip */}
+      {props.length > 0 && (
+        <div className="mg-props">
+          {props.map(([k, v]) => {
+            const propKey = `${entry.wid}.${k}`
+            const isRevealed = mode === 'study' || revealed[propKey]
+            return (
+              <div key={k} className="mg-prop">
+                <span className="mg-prop-key">{k}</span>
+                {isRevealed ? (
+                  <span className="mg-prop-value">{v}</span>
+                ) : (
+                  <button
+                    className="mg-prop-value quiz"
+                    onClick={() => onReveal(propKey)}
+                    aria-label={`Reveal ${k}`}
+                  >
+                    ?
+                  </button>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Role */}
+      {entry.job && (
+        <p className="mg-role">
+          {mode === 'quiz' && !roleRevealed ? (
+            <button
+              className="mg-role-cover"
+              onClick={() => onReveal(roleKey)}
+            >
+              What&rsquo;s it doing in this sentence? &darr;
+            </button>
+          ) : (
+            entry.job
+          )}
+        </p>
+      )}
+
+      {/* Note */}
+      {entry.note && mode === 'study' && (
+        <p className="mg-note">{entry.note}</p>
+      )}
+
+      {/* Learn more */}
+      {topicSlug && mode === 'study' && (
+        <Link href={`/topics/${topicSlug}`} className="mg-learn">
+          Learn more
+        </Link>
+      )}
+
+      {/* Quiz: reveal all */}
+      {mode === 'quiz' && !allRevealed && (
+        <button className="mg-quiz-reveal-all" onClick={onRevealAll}>
+          Reveal all &rarr;
+        </button>
       )}
     </div>
   )
