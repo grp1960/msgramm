@@ -23,6 +23,8 @@ export default function Breakdown({
   const [filter, setFilter] = useState('all')
   const [showTranslation, setShowTranslation] = useState(true)
   const [showContext, setShowContext] = useState(false)
+  const [showPeek, setShowPeek] = useState(false)
+  const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null)
   const [revealed, setRevealed] = useState<Record<string, boolean>>({})
   const [topicByType, setTopicByType] = useState<Record<string, string>>({})
   const activeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -87,8 +89,14 @@ export default function Breakdown({
                 data-hovered={hoveredId === w.wid ? 'true' : undefined}
                 data-active={activeId === w.wid ? 'true' : undefined}
                 data-dim={filter !== 'all' && w.type !== filter ? 'true' : undefined}
-                onMouseEnter={() => setHoveredId(w.wid)}
-                onMouseLeave={() => setHoveredId(null)}
+                onMouseEnter={(e) => {
+                  setHoveredId(w.wid)
+                  if (showPeek) {
+                    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+                    setTooltipPos({ x: rect.left + rect.width / 2, y: rect.top })
+                  }
+                }}
+                onMouseLeave={() => { setHoveredId(null); setTooltipPos(null) }}
                 onClick={() => handleWordClick(w.wid)}
               >
                 <span className="mg-word-num">{String(w.wid).padStart(2, '0')}</span>
@@ -143,6 +151,13 @@ export default function Breakdown({
               In paragraph
             </button>
           )}
+          <button
+            className="mg-action"
+            aria-pressed={showPeek ? 'true' : 'false'}
+            onClick={() => setShowPeek(v => !v)}
+          >
+            Peek
+          </button>
           {onSave !== undefined && (
             <button
               className="mg-action"
@@ -222,6 +237,13 @@ export default function Breakdown({
         </div>
       )}
 
+      {/* ── Peek tooltip ── */}
+      {showPeek && tooltipPos && hoveredId !== null && (() => {
+        const word = words.find(w => w.wid === hoveredId)
+        if (!word) return null
+        return <WordTooltip word={word} x={tooltipPos.x} y={tooltipPos.y} />
+      })()}
+
       {/* ── Tags ── */}
       {(sentence.tags?.length > 0 || onUserTagsChange !== undefined) && (
         <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap', marginTop: 48, paddingTop: 32, borderTop: 'var(--border-rule)' }}>
@@ -244,6 +266,85 @@ export default function Breakdown({
         </div>
       )}
     </>
+  )
+}
+
+const PROP_FIELDS = ['case', 'gender', 'number', 'tense', 'person'] as const
+
+function WordTooltip({ word, x, y }: { word: import('@/lib/types').WordEntry; x: number; y: number }) {
+  const props = PROP_FIELDS
+    .filter(k => word[k] != null && word[k] !== '')
+    .map(k => [k, word[k] as string] as [string, string])
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        left: x,
+        top: y - 8,
+        transform: 'translate(-50%, -100%)',
+        zIndex: 90,
+        background: 'var(--mist)',
+        border: 'var(--border-hair)',
+        boxShadow: '0 2px 8px rgba(30,30,46,0.10), 0 8px 24px rgba(30,30,46,0.06)',
+        padding: '18px 20px',
+        maxWidth: 320,
+        minWidth: 220,
+        pointerEvents: 'none',
+      }}
+    >
+      {/* Number + POS */}
+      <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', letterSpacing: '0.08em', color: 'var(--ink-40)', marginBottom: 8, display: 'flex', gap: 8 }}>
+        {String(word.wid).padStart(2, '0')}
+        <span style={{ color: 'var(--ink-60)', textTransform: 'uppercase' }}>{word.type}</span>
+      </div>
+
+      {/* Word + gloss */}
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: props.length ? 14 : 10, flexWrap: 'wrap' }}>
+        <span style={{ fontFamily: 'var(--display)', fontSize: 'clamp(20px,2vw,24px)', fontWeight: 300, letterSpacing: '-0.02em', color: 'var(--ink)' }}>
+          {word.word}
+        </span>
+        {word.translation && (
+          <span style={{ fontFamily: 'var(--display)', fontStyle: 'italic', fontSize: 14, color: 'var(--ink-60)' }}>
+            &ldquo;{word.translation}&rdquo;
+          </span>
+        )}
+      </div>
+
+      {/* Lemma */}
+      {word.form && (
+        <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--ink-60)', marginBottom: 12 }}>
+          <span style={{ textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--ink-40)', marginRight: 6 }}>Lemma</span>
+          {word.form}
+        </div>
+      )}
+
+      {/* Props */}
+      {props.length > 0 && (
+        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', paddingBottom: 12, marginBottom: 12, borderBottom: '1px solid var(--ink-10)' }}>
+          {props.map(([k, v]) => (
+            <div key={k}>
+              <span style={{ fontFamily: 'var(--mono)', fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-60)', display: 'block', marginBottom: 3 }}>{k}</span>
+              <span style={{ fontFamily: 'var(--display)', fontSize: 15, color: 'var(--ink)' }}>{v}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Role */}
+      {word.job && (
+        <p style={{ fontFamily: 'var(--display)', fontSize: 14, fontWeight: 300, lineHeight: 1.45, color: 'var(--ink)', margin: 0, marginBottom: word.note ? 10 : 0 }}>
+          {word.job}
+        </p>
+      )}
+
+      {/* Note */}
+      {word.note && (
+        <p style={{ fontFamily: 'var(--display)', fontStyle: 'italic', fontSize: 13, lineHeight: 1.5, color: 'var(--ink-60)', margin: 0, paddingLeft: 12, borderLeft: '1px solid var(--ink-20)' }}>
+          {word.note}
+        </p>
+      )}
+    </div>
   )
 }
 
