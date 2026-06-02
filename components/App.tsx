@@ -98,8 +98,7 @@ export default function App() {
         setSavedIds(ids => new Set([...ids, data.id]))
         await loadSaved()
       }
-      setInput('')
-      router.push('/sentences/' + data.id)
+      router.push('/sentences/' + data.id + '?new=1')
     } catch (e: any) {
       setError(e.message ?? 'Something went wrong. Please try again.')
     } finally {
@@ -230,6 +229,31 @@ export default function App() {
                 ))
               )
             )}
+          </div>
+        )}
+
+        {/* Enter view — loading overlay */}
+        {view === 'enter' && loading && (
+          <div style={{
+            position: 'fixed', inset: 0, zIndex: 50,
+            background: 'var(--bone)',
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            gap: 24, padding: 40,
+          }}>
+            <p style={{
+              fontFamily: 'var(--display)', fontWeight: 300,
+              fontSize: 'clamp(20px, 2.4vw, 28px)', letterSpacing: '-0.025em',
+              color: 'var(--ink)', maxWidth: 640, textAlign: 'center', lineHeight: 1.3,
+            }}>
+              {input}
+            </p>
+            <p style={{
+              fontFamily: 'var(--mono)', fontSize: '12px', letterSpacing: '0.1em',
+              textTransform: 'uppercase', color: 'var(--ink-40)',
+            }}>
+              Breaking it down…
+            </p>
           </div>
         )}
 

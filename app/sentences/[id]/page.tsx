@@ -12,10 +12,17 @@ async function getSentence(id: string): Promise<Sentence | null> {
   return data as Sentence | null
 }
 
-export default async function Page({ params }: { params: Promise<{ id: string }> }) {
+export default async function Page({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ new?: string }>
+}) {
   const { id } = await params
+  const { new: isNew } = await searchParams
   const sentence = await getSentence(id)
   if (!sentence) notFound()
 
-  return <SentencePage sentence={sentence} />
+  return <SentencePage sentence={sentence} isNew={isNew === '1'} />
 }
