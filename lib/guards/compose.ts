@@ -17,10 +17,18 @@ export function withGuards(...guards: Guard[]) {
   return (handler: RouteHandler) =>
     async (req: NextRequest): Promise<NextResponse> => {
       const ctx: GuardContext = {}
-      for (const guard of guards) {
-        const result = await guard(req, ctx)
-        if (result) return result
+      try {
+        for (const guard of guards) {
+          const result = await guard(req, ctx)
+          if (result) return result
+        }
+        return await handler(req)
+      } catch (err) {
+        console.error('[withGuards] unhandled error:', err)
+        return NextResponse.json(
+          { error: (err instanceof Error ? err.message : String(err)) || 'Internal server error' },
+          { status: 500 },
+        )
       }
-      return handler(req)
     }
 }
