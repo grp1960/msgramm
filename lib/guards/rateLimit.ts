@@ -109,10 +109,13 @@ export function rateLimitGuard(options: RateLimitOptions): Guard {
 
   return async (req, ctx) => {
     if (!store) {
-      store = supabaseRateLimitStore(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      )
+      const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+      const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+      if (!url || !key) {
+        console.warn('[rateLimitGuard] SUPABASE_SERVICE_ROLE_KEY not set — rate limiting disabled')
+        return null
+      }
+      store = supabaseRateLimitStore(url, key)
     }
 
     const identifier =
