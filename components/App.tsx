@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Sentence, Difficulty } from '@/lib/types'
 import { supabase } from '@/lib/supabase'
@@ -234,27 +234,7 @@ export default function App() {
 
         {/* Enter view — loading overlay */}
         {view === 'enter' && loading && (
-          <div style={{
-            position: 'fixed', inset: 0, zIndex: 50,
-            background: 'var(--bone)',
-            display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center',
-            gap: 24, padding: 40,
-          }}>
-            <p style={{
-              fontFamily: 'var(--display)', fontWeight: 300,
-              fontSize: 'clamp(20px, 2.4vw, 28px)', letterSpacing: '-0.025em',
-              color: 'var(--ink)', maxWidth: 640, textAlign: 'center', lineHeight: 1.3,
-            }}>
-              {input}
-            </p>
-            <p style={{
-              fontFamily: 'var(--mono)', fontSize: '12px', letterSpacing: '0.1em',
-              textTransform: 'uppercase', color: 'var(--ink-40)',
-            }}>
-              Breaking it down…
-            </p>
-          </div>
+          <BreakdownLoader sentence={input} />
         )}
 
         {/* Enter view */}
@@ -410,4 +390,60 @@ const navBtn: React.CSSProperties = {
   fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', background: 'transparent',
   border: '1px solid rgba(255,255,255,0.3)', borderRadius: 20,
   padding: '4px 14px', cursor: 'pointer',
+}
+
+function BreakdownLoader({ sentence }: { sentence: string }) {
+  const words = sentence.trim().replace(/[.!?]$/, '').split(/\s+/)
+  const [activeIdx, setActiveIdx] = useState(0)
+  const dir = useRef(1)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setActiveIdx(prev => {
+        const next = prev + dir.current
+        if (next >= words.length - 1) dir.current = -1
+        if (next <= 0) dir.current = 1
+        return next
+      })
+    }, 340)
+    return () => clearInterval(id)
+  }, [words.length])
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 50,
+      background: 'var(--bone)',
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      gap: 32, padding: 40,
+    }}>
+      <p style={{
+        fontFamily: 'var(--display)', fontWeight: 300,
+        fontSize: 'clamp(20px, 2.4vw, 28px)', letterSpacing: '-0.025em',
+        color: 'var(--ink)', maxWidth: 640, textAlign: 'center', lineHeight: 1.5,
+      }}>
+        {words.map((w, i) => (
+          <span key={i}>
+            <span style={{
+              display: 'inline-block',
+              padding: '0 3px', margin: '0 -3px',
+              borderRadius: 2,
+              background: i === activeIdx ? 'var(--ink)' : 'transparent',
+              color: i === activeIdx ? 'var(--bone)' : 'var(--ink)',
+              transition: 'background 0.25s, color 0.25s',
+            }}>
+              {w}
+            </span>
+            {i < words.length - 1 ? ' ' : ''}
+          </span>
+        ))}
+      </p>
+      <p style={{
+        fontFamily: 'var(--mono)', fontSize: '11px', letterSpacing: '0.12em',
+        textTransform: 'uppercase', color: 'var(--ink-40)',
+      }}>
+        Breaking it down
+      </p>
+    </div>
+  )
 }
