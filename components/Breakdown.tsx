@@ -196,7 +196,7 @@ export default function Breakdown({
             onClick={() => setShowPeek(v => !v)}
           >
             <span className="mg-switch-track"><span className="mg-switch-thumb" /></span>
-            Peek
+            Word Popups
           </button>
         </div>
       </div>
