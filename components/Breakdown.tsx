@@ -23,7 +23,7 @@ export default function Breakdown({
   const [filter, setFilter] = useState('all')
   const [showTranslation, setShowTranslation] = useState(true)
   const [showContext, setShowContext] = useState(false)
-  const [showPeek, setShowPeek] = useState(false)
+  const [showPeek, setShowPeek] = useState(true)
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null)
   const [showLexicon, setShowLexicon] = useState(true)
   const [revealed, setRevealed] = useState<Record<string, boolean>>({})
