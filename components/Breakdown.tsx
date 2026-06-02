@@ -179,23 +179,25 @@ export default function Breakdown({
             Quiz
           </button>
         </div>
-        <div style={{ display: 'flex', gap: 4 }}>
-          <div className="mg-mode-toggle">
-            <button
-              aria-pressed={showTranslation ? 'true' : 'false'}
-              onClick={() => setShowTranslation(v => !v)}
-            >
-              Translate
-            </button>
-          </div>
-          <div className="mg-mode-toggle">
-            <button
-              aria-pressed={showPeek ? 'true' : 'false'}
-              onClick={() => setShowPeek(v => !v)}
-            >
-              Peek
-            </button>
-          </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+          <button
+            className="mg-switch"
+            role="switch"
+            aria-checked={showTranslation ? 'true' : 'false'}
+            onClick={() => setShowTranslation(v => !v)}
+          >
+            <span className="mg-switch-track"><span className="mg-switch-thumb" /></span>
+            Translate
+          </button>
+          <button
+            className="mg-switch"
+            role="switch"
+            aria-checked={showPeek ? 'true' : 'false'}
+            onClick={() => setShowPeek(v => !v)}
+          >
+            <span className="mg-switch-track"><span className="mg-switch-thumb" /></span>
+            Peek
+          </button>
         </div>
       </div>
 
