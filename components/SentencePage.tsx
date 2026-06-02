@@ -98,53 +98,25 @@ export default function SentencePage({ sentence, isNew }: { sentence: Sentence; 
           </div>
         </header>
 
-        {/* ── Save prompt for freshly submitted sentences ── */}
-        {isNew && !saved && (
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '14px 20px', marginBottom: 32,
-            background: 'var(--bone-d)', borderLeft: '2px solid var(--ink)',
-            flexWrap: 'wrap', gap: 12,
-          }}>
-            <span style={{ fontFamily: 'var(--sans)', fontSize: 15, color: 'var(--ink-70)' }}>
-              Want to keep this breakdown?
-            </span>
-            <div style={{ display: 'flex', gap: 8 }}>
-              {user ? (
-                <button
-                  onClick={handleSave}
-                  style={{
-                    fontFamily: 'var(--mono)', fontSize: '12px', letterSpacing: '0.08em',
-                    textTransform: 'uppercase', background: 'var(--ink)', color: 'var(--bone)',
-                    border: 0, padding: '8px 16px', cursor: 'pointer',
-                  }}
-                >
-                  Save it
-                </button>
-              ) : (
-                <button
-                  onClick={() => setShowAuth(true)}
-                  style={{
-                    fontFamily: 'var(--mono)', fontSize: '12px', letterSpacing: '0.08em',
-                    textTransform: 'uppercase', background: 'var(--ink)', color: 'var(--bone)',
-                    border: 0, padding: '8px 16px', cursor: 'pointer',
-                  }}
-                >
-                  Sign in to save
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-
-        {isNew && saved && (
-          <div style={{
-            padding: '14px 20px', marginBottom: 32,
-            background: 'var(--bone-d)', borderLeft: '2px solid var(--ink)',
-          }}>
-            <span style={{ fontFamily: 'var(--mono)', fontSize: '12px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-60)' }}>
-              ✓ Saved to your collection
-            </span>
+        {/* ── Save button for freshly submitted sentences ── */}
+        {isNew && (
+          <div style={{ marginBottom: 32 }}>
+            {!saved ? (
+              <button
+                onClick={user ? handleSave : () => setShowAuth(true)}
+                style={{
+                  fontFamily: 'var(--mono)', fontSize: '12px', letterSpacing: '0.08em',
+                  textTransform: 'uppercase', background: 'var(--ink)', color: 'var(--bone)',
+                  border: 0, padding: '10px 20px', cursor: 'pointer',
+                }}
+              >
+                {user ? 'Save this breakdown' : 'Sign in to save'}
+              </button>
+            ) : (
+              <span style={{ fontFamily: 'var(--mono)', fontSize: '12px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-40)' }}>
+                ✓ Saved
+              </span>
+            )}
           </div>
         )}
 
