@@ -12,9 +12,65 @@ import FeedbackModal from './FeedbackModal'
 
 const DIFFICULTY_ORDER: Difficulty[] = ['Beginner', 'Intermediate', 'Advanced', 'Expert']
 
-const CONCEPTS = [
-  { id: 'two-way-preps', label: 'Two-Way Preps' },
-  { id: 'konjunktiv-ii', label: 'Konjunktiv II' },
+const TAXONOMY = [
+  {
+    category: 'Verbs',
+    concepts: [
+      { id: 'separable-verbs',  label: 'Separable Verbs' },
+      { id: 'konjunktiv-ii',   label: 'Konjunktiv II' },
+      { id: 'modal-verbs',     label: 'Modal Verbs' },
+      { id: 'passive-voice',   label: 'Passive Voice' },
+      { id: 'reflexive-verbs', label: 'Reflexive Verbs' },
+      { id: 'verb-tenses',     label: 'Tenses' },
+    ],
+  },
+  {
+    category: 'Nouns',
+    concepts: [
+      { id: 'case-nominative', label: 'Nominative' },
+      { id: 'case-accusative', label: 'Accusative' },
+      { id: 'case-dative',     label: 'Dative' },
+      { id: 'case-genitive',   label: 'Genitive' },
+      { id: 'noun-gender',     label: 'Gender' },
+      { id: 'pluralisation',   label: 'Pluralisation' },
+    ],
+  },
+  {
+    category: 'Pronouns',
+    concepts: [
+      { id: 'personal-pronouns',     label: 'Personal' },
+      { id: 'relative-pronouns',     label: 'Relative' },
+      { id: 'demonstrative-pronouns',label: 'Demonstrative' },
+      { id: 'indefinite-pronouns',   label: 'Indefinite' },
+    ],
+  },
+  {
+    category: 'Adjectives',
+    concepts: [
+      { id: 'adjective-declension', label: 'Declension' },
+      { id: 'adjective-comparison', label: 'Comparison' },
+      { id: 'adverbs',              label: 'Adverbs' },
+    ],
+  },
+  {
+    category: 'Prepositions',
+    concepts: [
+      { id: 'two-way-preps',     label: 'Two-Way Preps' },
+      { id: 'accusative-preps',  label: 'Accusative Preps' },
+      { id: 'dative-preps',      label: 'Dative Preps' },
+      { id: 'genitive-preps',    label: 'Genitive Preps' },
+    ],
+  },
+  {
+    category: 'Syntax',
+    concepts: [
+      { id: 'verb-second',               label: 'Verb-Second Rule' },
+      { id: 'subordinate-clauses',       label: 'Subordinate Clauses' },
+      { id: 'coordinating-conjunctions', label: 'Coord. Conjunctions' },
+      { id: 'negation',                  label: 'Negation' },
+      { id: 'tekamolo',                  label: 'TeKaMoLo' },
+    ],
+  },
 ]
 
 type View = 'list' | 'enter'
@@ -27,6 +83,7 @@ export default function App() {
   const [listFilter, setListFilter] = useState<ListFilter>('all')
   const [langFilter, setLangFilter] = useState<string>('all')
   const [conceptFilter, setConceptFilter] = useState<string | null>(null)
+  const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [inputLang, setInputLang] = useState<string>(LANGUAGES[0].code)
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -104,7 +161,8 @@ export default function App() {
     router.push('/sentences/' + s.id)
   }
 
-  const visibleSentences = sentences
+  const sourceList = listFilter === 'mine' ? savedList : sentences
+  const visibleSentences = sourceList
     .filter(s => langFilter === 'all' || s.language === langFilter)
     .filter(s => !conceptFilter || (s.concepts ?? []).includes(conceptFilter))
 
@@ -114,7 +172,7 @@ export default function App() {
     return acc
   }, {} as Partial<Record<Difficulty, Sentence[]>>)
 
-  const displaySentences = listFilter === 'mine' ? savedList : []
+  const displaySentences = visibleSentences
 
   return (
     <>
@@ -186,18 +244,65 @@ export default function App() {
               </div>
             </div>
 
-            {/* Concept chips */}
-            <div className="mg-concept-row">
-              {CONCEPTS.map(c => (
-                <button
-                  key={c.id}
-                  className="mg-concept"
-                  aria-pressed={conceptFilter === c.id ? 'true' : 'false'}
-                  onClick={() => setConceptFilter(conceptFilter === c.id ? null : c.id)}
-                >
-                  {c.label}
-                </button>
-              ))}
+            {/* Grammar concept browser */}
+            <div style={{ borderTop: 'var(--border-rule)', paddingTop: 16, marginTop: 8 }}>
+
+              {/* Category tabs */}
+              <div style={{ display: 'flex', gap: 0, flexWrap: 'wrap', marginBottom: 12 }}>
+                {TAXONOMY.map(t => (
+                  <button
+                    key={t.category}
+                    onClick={() => {
+                      if (activeCategory === t.category) {
+                        setActiveCategory(null)
+                        setConceptFilter(null)
+                      } else {
+                        setActiveCategory(t.category)
+                        setConceptFilter(null)
+                      }
+                    }}
+                    style={{
+                      fontFamily: 'var(--mono)', fontSize: '11px', letterSpacing: '0.08em',
+                      textTransform: 'uppercase', border: 'var(--border-hair)',
+                      borderRight: 'none', padding: '6px 14px', cursor: 'pointer',
+                      background: activeCategory === t.category ? 'var(--ink)' : 'transparent',
+                      color: activeCategory === t.category ? 'var(--bone)' : 'var(--ink-60)',
+                      transition: 'background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease)',
+                    }}
+                  >
+                    {t.category}
+                  </button>
+                ))}
+                <div style={{ flex: 1, borderBottom: 'var(--border-hair)' }} />
+              </div>
+
+              {/* Concept chips for active category */}
+              {activeCategory && (() => {
+                const cat = TAXONOMY.find(t => t.category === activeCategory)!
+                const allIds = sentences.flatMap(s => s.concepts ?? [])
+                return (
+                  <div className="mg-concept-row" style={{ paddingTop: 0, borderTop: 'none', marginTop: 0 }}>
+                    {cat.concepts.map(c => {
+                      const hasContent = allIds.includes(c.id)
+                      return (
+                        <button
+                          key={c.id}
+                          className="mg-concept"
+                          aria-pressed={conceptFilter === c.id ? 'true' : 'false'}
+                          disabled={!hasContent}
+                          onClick={() => setConceptFilter(conceptFilter === c.id ? null : c.id)}
+                          style={!hasContent ? {
+                            opacity: 0.35, cursor: 'default',
+                            borderStyle: 'dashed',
+                          } : undefined}
+                        >
+                          {c.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )
+              })()}
             </div>
 
             {/* All — grouped by difficulty */}
