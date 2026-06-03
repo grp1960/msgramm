@@ -46,6 +46,7 @@ export type Sentence = {
   text: string
   difficulty: Difficulty
   tags: string[]
+  concepts: string[] | null
   ctx_before: string | null
   ctx_after: string | null
   ctx_before_translation: string | null

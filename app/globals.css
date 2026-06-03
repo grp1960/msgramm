@@ -267,6 +267,36 @@ a { color: inherit; text-decoration: none; }
   margin-bottom: 0;
 }
 
+/* ── Concept chips (grammar learning goals) ── */
+
+.mg-concept-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 16px 0;
+  border-top: var(--border-rule);
+  margin-top: 8px;
+}
+
+.mg-concept {
+  font-family: var(--mono);
+  font-size: var(--t-mono-sm);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gold);
+  background: transparent;
+  border: 1px solid var(--gold);
+  border-radius: 999px;
+  padding: 5px 14px;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.mg-concept:hover { background: rgba(184,137,58,0.08); }
+.mg-concept[aria-pressed="true"] {
+  background: var(--gold);
+  color: var(--white);
+}
+
 /* ── Toggle switch ── */
 
 .mg-switch {

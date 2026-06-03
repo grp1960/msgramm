@@ -12,6 +12,11 @@ import FeedbackModal from './FeedbackModal'
 
 const DIFFICULTY_ORDER: Difficulty[] = ['Beginner', 'Intermediate', 'Advanced', 'Expert']
 
+const CONCEPTS = [
+  { id: 'two-way-preps', label: 'Two-Way Preps' },
+  { id: 'konjunktiv-ii', label: 'Konjunktiv II' },
+]
+
 type View = 'list' | 'enter'
 type ListFilter = 'all' | 'mine'
 
@@ -21,6 +26,7 @@ export default function App() {
   const [sentences, setSentences] = useState<Sentence[]>([])
   const [listFilter, setListFilter] = useState<ListFilter>('all')
   const [langFilter, setLangFilter] = useState<string>('all')
+  const [conceptFilter, setConceptFilter] = useState<string | null>(null)
   const [inputLang, setInputLang] = useState<string>(LANGUAGES[0].code)
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -98,9 +104,9 @@ export default function App() {
     router.push('/sentences/' + s.id)
   }
 
-  const visibleSentences = langFilter === 'all'
-    ? sentences
-    : sentences.filter(s => s.language === langFilter)
+  const visibleSentences = sentences
+    .filter(s => langFilter === 'all' || s.language === langFilter)
+    .filter(s => !conceptFilter || (s.concepts ?? []).includes(conceptFilter))
 
   const grouped = DIFFICULTY_ORDER.reduce((acc, d) => {
     const group = visibleSentences.filter(s => (s.difficulty ?? 'Intermediate') === d)
@@ -178,6 +184,20 @@ export default function App() {
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* Concept chips */}
+            <div className="mg-concept-row">
+              {CONCEPTS.map(c => (
+                <button
+                  key={c.id}
+                  className="mg-concept"
+                  aria-pressed={conceptFilter === c.id ? 'true' : 'false'}
+                  onClick={() => setConceptFilter(conceptFilter === c.id ? null : c.id)}
+                >
+                  {c.label}
+                </button>
+              ))}
             </div>
 
             {/* All — grouped by difficulty */}
