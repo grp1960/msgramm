@@ -358,7 +358,7 @@ function WordTooltip({ word, x, y }: { word: import('@/lib/types').WordEntry; x:
       {/* Lemma */}
       {word.form && (
         <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--ink-60)', marginBottom: 12 }}>
-          <span style={{ textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--ink-40)', marginRight: 6 }}>Lemma</span>
+          <span style={{ textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--ink-40)', marginRight: 6 }}>Base form</span>
           {word.form}
         </div>
       )}

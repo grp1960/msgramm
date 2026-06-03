@@ -54,10 +54,10 @@ export default function WordEntry({
           )}
         </div>
 
-        {/* Lemma */}
+        {/* Base form */}
         {entry.form && (
           <div className="mg-entry-lemma">
-            <span className="lem-key">Lemma</span>
+            <span className="lem-key">Base form</span>
             {entry.form}
           </div>
         )}
