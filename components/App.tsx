@@ -12,13 +12,6 @@ import FeedbackModal from './FeedbackModal'
 
 const DIFFICULTY_ORDER: Difficulty[] = ['Beginner', 'Intermediate', 'Advanced', 'Expert']
 
-const DIFFICULTY_COLORS: Record<Difficulty, { bg: string; color: string }> = {
-  Beginner:     { bg: '#E8F5E9', color: '#2E7D32' },
-  Intermediate: { bg: '#E3F2FD', color: '#1565C0' },
-  Advanced:     { bg: '#FFF3E0', color: '#E65100' },
-  Expert:       { bg: '#FCE4EC', color: '#880E4F' },
-}
-
 type View = 'list' | 'enter'
 type ListFilter = 'all' | 'mine'
 
@@ -84,17 +77,12 @@ export default function App() {
       })
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
-        if (res.status === 422) {
-          throw new Error(body.message ?? "This doesn't look like a natural language sentence.")
-        }
+        if (res.status === 422) throw new Error(body.message ?? "This doesn't look like a natural language sentence.")
         throw new Error(body.error ?? 'Something went wrong. Please try again.')
       }
       const data = await res.json()
       if (user) {
-        await supabase
-          .from('saved_sentences')
-          .insert({ user_id: user.id, sentence_id: data.id })
-          .select()
+        await supabase.from('saved_sentences').insert({ user_id: user.id, sentence_id: data.id }).select()
         setSavedIds(ids => new Set([...ids, data.id]))
         await loadSaved()
       }
@@ -120,6 +108,8 @@ export default function App() {
     return acc
   }, {} as Partial<Record<Difficulty, Sentence[]>>)
 
+  const displaySentences = listFilter === 'mine' ? savedList : []
+
   return (
     <>
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
@@ -127,93 +117,76 @@ export default function App() {
         <FeedbackModal scope="general" userId={user?.id} userEmail={user?.email} onClose={() => setShowFeedback(false)} />
       )}
 
-      {/* Nav */}
-      <nav style={{
-        background: '#16324F', padding: '0 48px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        height: 48,
-      }}>
-        <Link href="/" style={{ fontFamily: 'Georgia, serif', color: 'white', fontSize: '1rem', fontWeight: 600, letterSpacing: '0.02em', textDecoration: 'none' }}>
-          Ms. Gramm
-        </Link>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          {view === 'enter' && (
-            <button onClick={() => setView('list')} style={navBtn}>← Sentences</button>
-          )}
-          {view !== 'enter' && (
-            <button onClick={() => setView('enter')} style={navBtn}>Enter a sentence</button>
-          )}
-          <Link href="/topics" style={navBtn}>Topics</Link>
-          <button onClick={() => setShowFeedback(true)} style={navBtn}>Feedback</button>
-          {user ? (
-            <button onClick={() => supabase.auth.signOut()} style={navBtn}>Sign out</button>
-          ) : (
-            <button onClick={() => setShowAuth(true)} style={{ ...navBtn, borderColor: 'rgba(255,255,255,0.6)', color: 'white' }}>
-              Sign in
-            </button>
-          )}
-        </div>
-      </nav>
+      {/* Loading overlay */}
+      {loading && <BreakdownLoader sentence={input} />}
 
-      <main style={{ maxWidth: 860, padding: '40px 48px' }}>
+      <div className="mg-shell">
 
-        {/* List view */}
+        {/* Header */}
+        <header className="mg-header">
+          <Link href="/" className="mg-wordmark">
+            Ms<span className="dot" />Gramm
+          </Link>
+
+          <div className="mg-header-meta">
+            <span>Sentence Breakdown</span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            {view === 'enter' ? (
+              <button onClick={() => setView('list')} style={monoLink}>← Sentences</button>
+            ) : (
+              <button onClick={() => setView('enter')} style={monoLink}>+ Enter a sentence</button>
+            )}
+            <Link href="/topics" style={monoLink}>Topics</Link>
+            <button onClick={() => setShowFeedback(true)} style={{ ...monoLink, background: 'transparent', border: 0, cursor: 'pointer' }}>Feedback</button>
+            {user ? (
+              <button onClick={() => supabase.auth.signOut()} style={{ ...monoLink, background: 'transparent', border: 0, cursor: 'pointer' }}>Sign out</button>
+            ) : (
+              <button onClick={() => setShowAuth(true)} style={{ ...monoLink, background: 'transparent', border: 0, cursor: 'pointer' }}>Sign in</button>
+            )}
+          </div>
+        </header>
+
+        {/* ── List view ── */}
         {view === 'list' && (
           <div>
-            {/* All / Mine toggle */}
-            {user && (
-              <div style={{ display: 'flex', marginBottom: 36, borderRadius: 8, overflow: 'hidden', border: '1px solid #D8D4CC', width: 'fit-content' }}>
-                {(['all', 'mine'] as const).map(f => (
-                  <button
-                    key={f}
-                    onClick={() => setListFilter(f)}
-                    style={{
-                      padding: '7px 24px', fontSize: '0.8rem', fontWeight: 500,
-                      cursor: 'pointer', border: 'none',
-                      background: listFilter === f ? '#1B3A5C' : 'white',
-                      color: listFilter === f ? 'white' : '#666',
-                    }}
-                  >
-                    {f === 'all' ? 'All' : 'Mine'}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Language filter */}
-            <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
-              {[{ code: 'all', label: 'All' }, ...LANGUAGES].map(({ code, label }) => {
-                const active = langFilter === code
-                return (
+            {/* Toolbar: All/Mine + language filter */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 40, flexWrap: 'wrap' }}>
+              {user && (
+                <div className="mg-mode-toggle">
+                  {(['all', 'mine'] as const).map(f => (
+                    <button
+                      key={f}
+                      aria-pressed={listFilter === f ? 'true' : 'false'}
+                      onClick={() => setListFilter(f)}
+                    >
+                      {f === 'all' ? 'All' : 'Mine'}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                {[{ code: 'all', label: 'All languages' }, ...LANGUAGES].map(({ code, label }) => (
                   <button
                     key={code}
+                    className="mg-filter"
+                    aria-pressed={langFilter === code ? 'true' : 'false'}
                     onClick={() => setLangFilter(code)}
-                    style={{
-                      padding: '4px 14px', borderRadius: 20, fontSize: '0.75rem',
-                      fontWeight: 500, cursor: 'pointer',
-                      background: active ? '#1B3A5C' : 'white',
-                      color: active ? 'white' : '#666',
-                      border: `1px solid ${active ? '#1B3A5C' : '#D8D4CC'}`,
-                    }}
                   >
                     {label}
                   </button>
-                )
-              })}
+                ))}
+              </div>
             </div>
-
-            {/* Column headers */}
-            <TableHeader showDifficulty={listFilter === 'mine'} />
 
             {/* All — grouped by difficulty */}
             {listFilter === 'all' && (
               DIFFICULTY_ORDER.filter(d => grouped[d]).map(d => (
-                <div key={d} style={{ marginBottom: 32 }}>
-                  <div style={{ fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#999', margin: '20px 0 4px' }}>
-                    {d}
-                  </div>
-                  {grouped[d]!.map((s, i) => (
-                    <SentenceRow key={s.id} s={s} onClick={() => openSentence(s)} saved={savedIds.has(s.id)} striped={i % 2 === 1} />
+                <div key={d}>
+                  <div className="mg-eyebrow" style={{ marginTop: 48, marginBottom: 0 }}>{d}</div>
+                  {grouped[d]!.map(s => (
+                    <SentenceRow key={s.id} s={s} onClick={() => openSentence(s)} saved={savedIds.has(s.id)} />
                   ))}
                 </div>
               ))
@@ -221,48 +194,41 @@ export default function App() {
 
             {/* Mine */}
             {listFilter === 'mine' && (
-              savedList.length === 0 ? (
-                <p style={{ color: '#999', fontSize: '0.9rem', marginTop: 16 }}>No saved sentences yet.</p>
+              displaySentences.length === 0 ? (
+                <p style={{ fontFamily: 'var(--mono)', fontSize: '13px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ink-40)', marginTop: 48 }}>
+                  No saved sentences yet.
+                </p>
               ) : (
-                savedList.map((s, i) => (
-                  <SentenceRow key={s.id} s={s} onClick={() => openSentence(s)} saved showDifficulty striped={i % 2 === 1} />
-                ))
+                <div style={{ marginTop: 8 }}>
+                  {displaySentences.map(s => (
+                    <SentenceRow key={s.id} s={s} onClick={() => openSentence(s)} saved />
+                  ))}
+                </div>
               )
             )}
           </div>
         )}
 
-        {/* Enter view — loading overlay */}
-        {view === 'enter' && loading && (
-          <BreakdownLoader sentence={input} />
-        )}
-
-        {/* Enter view */}
+        {/* ── Enter view ── */}
         {view === 'enter' && (
-          <div style={{ maxWidth: 600 }}>
-            <p style={{ fontFamily: 'Georgia, serif', fontSize: '1.1rem', color: '#1B3A5C', marginBottom: 8 }}>
-              Type a sentence to break down.
-            </p>
-            <p style={{ fontSize: '0.8rem', color: '#999', marginBottom: 16 }}>
-              Works best with complete sentences. Interesting grammar makes for a better breakdown.
-            </p>
-            <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
+          <div style={{ maxWidth: 680 }}>
+            <div className="mg-eyebrow" style={{ marginBottom: 32 }}>Break down a sentence</div>
+
+            {/* Language picker */}
+            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 24 }}>
               {LANGUAGES.map(l => (
                 <button
                   key={l.code}
+                  className="mg-filter"
+                  aria-pressed={inputLang === l.code ? 'true' : 'false'}
                   onClick={() => setInputLang(l.code)}
-                  style={{
-                    padding: '4px 14px', borderRadius: 20, fontSize: '0.75rem',
-                    fontWeight: 500, cursor: 'pointer',
-                    background: inputLang === l.code ? '#1B3A5C' : 'white',
-                    color: inputLang === l.code ? 'white' : '#666',
-                    border: `1px solid ${inputLang === l.code ? '#1B3A5C' : '#D8D4CC'}`,
-                  }}
                 >
                   {l.label}
                 </button>
               ))}
             </div>
+
+            {/* Textarea */}
             <textarea
               value={input}
               onChange={e => setInput(e.target.value)}
@@ -270,63 +236,52 @@ export default function App() {
               placeholder="e.g. Er hatte das Buch schon gelesen, bevor sie ankam."
               maxLength={300}
               style={{
-                width: '100%', fontFamily: 'Georgia, serif', fontSize: '1.2rem',
-                color: '#1B3A5C', background: 'white', border: '2px solid #D8D4CC',
-                borderRadius: 8, padding: '16px 18px', lineHeight: 1.6,
-                resize: 'none', minHeight: 100, outline: 'none',
+                width: '100%',
+                fontFamily: 'var(--display)', fontWeight: 300,
+                fontSize: 'clamp(18px, 2vw, 24px)',
+                letterSpacing: '-0.02em', lineHeight: 1.5,
+                color: 'var(--ink)', background: 'transparent',
+                border: 'none', borderBottom: 'var(--border-hair)',
+                padding: '12px 0', outline: 'none',
+                resize: 'none', minHeight: 80,
                 boxSizing: 'border-box',
               }}
             />
-            <div style={{ fontSize: '0.72rem', color: '#BBB', textAlign: 'right', margin: '6px 0 16px' }}>
-              {input.length} / 300
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 }}>
+              <span style={{ fontFamily: 'var(--mono)', fontSize: '11px', letterSpacing: '0.06em', color: 'var(--ink-40)' }}>
+                {input.length} / 300
+              </span>
+              {error && (
+                <span style={{ fontFamily: 'var(--sans)', fontSize: '14px', color: '#8B3A3A' }}>{error}</span>
+              )}
             </div>
-            {error && <p style={{ color: '#c0392b', fontSize: '0.85rem', marginBottom: 12 }}>{error}</p>}
+
             <button
               onClick={submit}
               disabled={loading || input.trim().length < 4}
               style={{
-                background: loading || input.trim().length < 4 ? '#CCC' : '#1B3A5C',
-                color: 'white', border: 'none', padding: '12px 28px',
-                borderRadius: 6, fontSize: '0.9rem', fontWeight: 500,
-                cursor: loading || input.trim().length < 4 ? 'default' : 'pointer',
+                marginTop: 28,
+                fontFamily: 'var(--mono)', fontSize: '13px', letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                background: loading || input.trim().length < 4 ? 'var(--ink-20)' : 'var(--ink)',
+                color: 'var(--bone)', border: 0,
+                padding: '12px 28px', cursor: loading || input.trim().length < 4 ? 'default' : 'pointer',
+                transition: 'background var(--dur-fast) var(--ease)',
               }}
             >
-              {loading ? 'Ms. Gramm is taking a look…' : 'Break it down'}
+              Break it down
             </button>
           </div>
         )}
 
-      </main>
+      </div>
     </>
   )
 }
 
-function TableHeader({ showDifficulty }: { showDifficulty?: boolean }) {
-  return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: showDifficulty ? '35% 35% 10% 10% 10%' : '45% 45% 10%',
-      padding: '6px 18px',
-      borderBottom: '2px solid #E8E4DC',
-    }}>
-      <span style={headerCell}>Sentence</span>
-      <span style={headerCell}>Translation</span>
-      <span style={{ ...headerCell, textAlign: 'right' }}>Language</span>
-      {showDifficulty && <span style={{ ...headerCell, textAlign: 'center' }}>Difficulty</span>}
-      {showDifficulty && <span style={{ ...headerCell, textAlign: 'center' }}>Saved</span>}
-    </div>
-  )
-}
-
-function SentenceRow({ s, onClick, saved, showDifficulty, striped }: {
-  s: Sentence
-  onClick: () => void
-  saved?: boolean
-  showDifficulty?: boolean
-  striped?: boolean
-}) {
+function SentenceRow({ s, onClick, saved }: { s: Sentence; onClick: () => void; saved?: boolean }) {
   const [hover, setHover] = useState(false)
-  const dc = s.difficulty ? DIFFICULTY_COLORS[s.difficulty] : null
+  const langLabel = LANGUAGES.find(l => l.code === s.language)?.label ?? s.language
 
   return (
     <button
@@ -334,62 +289,62 @@ function SentenceRow({ s, onClick, saved, showDifficulty, striped }: {
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       style={{
-        display: 'grid',
-        gridTemplateColumns: showDifficulty ? '35% 35% 10% 10% 10%' : '45% 45% 10%',
-        alignItems: 'center',
-        textAlign: 'left',
-        padding: '10px 18px',
-        border: 'none',
-        borderBottom: '1px solid #F0EDE8',
-        background: hover ? '#F0F4F8' : striped ? '#FAFAF8' : 'white',
-        cursor: 'pointer', width: '100%',
-        transition: 'background 0.12s',
+        display: 'flex', alignItems: 'baseline', justifyContent: 'space-between',
+        gap: 24, width: '100%', textAlign: 'left',
+        padding: '18px 0', border: 0,
+        borderBottom: 'var(--border-rule)',
+        background: hover ? 'var(--bone-d)' : 'transparent',
+        cursor: 'pointer',
+        transition: 'background var(--dur-fast) var(--ease)',
+        paddingLeft: hover ? 12 : 0,
+        paddingRight: hover ? 12 : 0,
       }}
     >
-      <span style={{ fontFamily: 'Georgia, serif', color: '#1B3A5C', fontSize: '0.95rem', paddingRight: 16 }}>
-        {s.text}
-      </span>
-      <span style={{ fontSize: '0.85rem', color: '#888', fontStyle: 'italic', paddingRight: 16 }}>
-        {s.breakdown?.translation ?? ''}
-      </span>
-      <span style={{ textAlign: 'right' }}>
-        <span style={{
-          fontSize: '0.65rem', fontWeight: 600, padding: '2px 8px', borderRadius: 20,
-          background: '#F0EDE8', color: '#888', letterSpacing: '0.04em',
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{
+          fontFamily: 'var(--display)', fontWeight: 300,
+          fontSize: 'clamp(16px, 1.6vw, 20px)', letterSpacing: '-0.02em',
+          color: 'var(--ink)', lineHeight: 1.35,
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
         }}>
-          {LANGUAGES.find(l => l.code === s.language)?.label ?? s.language}
+          {s.text}
+        </p>
+        {s.breakdown?.translation && (
+          <p style={{
+            fontFamily: 'var(--display)', fontStyle: 'italic', fontWeight: 300,
+            fontSize: 14, color: 'var(--ink-60)', marginTop: 3, lineHeight: 1.3,
+            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+          }}>
+            {s.breakdown.translation}
+          </p>
+        )}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
+        {saved && (
+          <span style={{ fontFamily: 'var(--mono)', fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-40)' }}>
+            Saved
+          </span>
+        )}
+        {s.difficulty && (
+          <span style={{ fontFamily: 'var(--mono)', fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-40)' }}>
+            {s.difficulty}
+          </span>
+        )}
+        <span style={{ fontFamily: 'var(--mono)', fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-60)' }}>
+          {langLabel}
         </span>
-      </span>
-      {showDifficulty && (
-        <span style={{ textAlign: 'center' }}>
-          {dc && s.difficulty && (
-            <span style={{
-              fontSize: '0.65rem', fontWeight: 600, padding: '2px 8px', borderRadius: 20,
-              background: dc.bg, color: dc.color,
-            }}>
-              {s.difficulty}
-            </span>
-          )}
-        </span>
-      )}
-      {showDifficulty && (
-        <span style={{ textAlign: 'center', fontSize: '0.75rem', color: '#27ae60', fontWeight: 500 }}>
-          {saved ? '✓' : ''}
-        </span>
-      )}
+      </div>
     </button>
   )
 }
 
-const headerCell: React.CSSProperties = {
-  fontSize: '0.65rem', fontWeight: 600, letterSpacing: '0.1em',
-  textTransform: 'uppercase', color: '#AAA',
-}
-
-const navBtn: React.CSSProperties = {
-  fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', background: 'transparent',
-  border: '1px solid rgba(255,255,255,0.3)', borderRadius: 20,
-  padding: '4px 14px', cursor: 'pointer',
+const monoLink: React.CSSProperties = {
+  fontFamily: 'var(--mono)',
+  fontSize: '11px',
+  letterSpacing: '0.08em',
+  textTransform: 'uppercase',
+  color: 'var(--ink-60)',
+  textDecoration: 'none',
 }
 
 function BreakdownLoader({ sentence }: { sentence: string }) {
