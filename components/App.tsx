@@ -188,9 +188,9 @@ export default function App() {
 
         {/* Header */}
         <header className="mg-header">
-          <Link href="/" className="mg-wordmark">
+          <button onClick={() => setView('list')} className="mg-wordmark" style={{ background: 'none', border: 0, cursor: 'pointer' }}>
             Ms<span className="dot" />Gramm
-          </Link>
+          </button>
 
           <div className="mg-header-meta">
             <span>Sentence Breakdown</span>
