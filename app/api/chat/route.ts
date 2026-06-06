@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 import { createClient } from '@supabase/supabase-js'
 import { withGuards, rateLimitGuard } from '@/lib/guards'
+import { checkQuota, recordUsage } from '@/lib/quota'
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
@@ -14,6 +15,19 @@ export const POST = withGuards(
   rateLimitGuard({ limit: 100, windowSecs: 86400, keyPrefix: 'chat' }),
 )(async (req: NextRequest): Promise<NextResponse> => {
   const { messages, sentence, userId } = await req.json()
+
+  // Quota check — chat always consumes tokens (no cache)
+  let quotaPeriodStart = ''
+  if (userId) {
+    const quota = await checkQuota(userId, 1500)
+    if (!quota.allowed) {
+      return NextResponse.json(
+        { error: 'QUOTA_EXCEEDED', message: (quota as any).reason },
+        { status: 429 },
+      )
+    }
+    quotaPeriodStart = quota.periodStart
+  }
 
   // Fetch active system prompt from DB
   const { data: promptData } = await supabaseAdmin
@@ -37,9 +51,15 @@ export const POST = withGuards(
       model: 'gpt-4o-mini',
       messages: [{ role: 'system', content: systemPrompt }, ...messages],
       temperature: 0.7,
+      max_tokens: 800,
     })
     reply = response.choices[0].message
     usage = response.usage
+
+    // Record actual token usage against quota
+    if (userId && quotaPeriodStart) {
+      await recordUsage(userId, quotaPeriodStart, usage?.total_tokens ?? 0)
+    }
   } catch {
     return NextResponse.json({ error: 'OpenAI error' }, { status: 500 })
   }

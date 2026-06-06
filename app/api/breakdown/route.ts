@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 import { supabase } from '@/lib/supabase'
 import { SYSTEM_PROMPT } from '@/lib/prompt'
-import { withGuards, heuristicGuard, rateLimitGuard, llmGuard } from '@/lib/guards'
+import { withGuards, heuristicGuard, rateLimitGuard, llmGuard, quotaGuard } from '@/lib/guards'
+import { checkQuota, recordUsage } from '@/lib/quota'
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
@@ -32,13 +33,15 @@ function validateBreakdown(obj: any): { valid: boolean; reason: string } {
 // ─── Guard chain ───────────────────────────────────────────────────────────
 // llmGuard is invoked manually inside the handler (after the cache check) so
 // we only pay for the classifier on new, uncached sentences.
+// quotaGuard runs after cache check (inside handler) for the same reason —
+// cached hits don't consume tokens and shouldn't count against quota.
 const llm = llmGuard()
 
 export const POST = withGuards(
   heuristicGuard(),
   rateLimitGuard({ limit: 20, windowSecs: 86400, keyPrefix: 'breakdown' }),
 )(async (req: NextRequest): Promise<NextResponse> => {
-  const { sentence, language, original_id, original_language, force } = await req.json()
+  const { sentence, language, original_id, original_language, force, userId } = await req.json()
 
   if (!sentence || sentence.trim().length < 4) {
     return NextResponse.json({ error: 'Sentence too short' }, { status: 400 })
@@ -59,7 +62,20 @@ export const POST = withGuards(
     if (cached) return NextResponse.json(cached)
   }
 
-  // 2. LLM content guard (only for new, uncached sentences)
+  // 2. Quota check (only for new, uncached sentences — cached hits are free)
+  let quotaPeriodStart = ''
+  if (!force) {
+    const quota = await checkQuota(userId ?? '', 2500)
+    if (!quota.allowed) {
+      return NextResponse.json(
+        { error: 'QUOTA_EXCEEDED', message: (quota as any).reason },
+        { status: 429 },
+      )
+    }
+    quotaPeriodStart = quota.periodStart
+  }
+
+  // 3. LLM content guard (only for new, uncached sentences)
   if (!force) {
     // Reconstruct a minimal request for the guard to read
     const guardReq = new Request(req.url, {
@@ -72,7 +88,7 @@ export const POST = withGuards(
     if (rejection) return rejection as NextResponse
   }
 
-  // 3. Generate breakdown
+  // 4. Generate breakdown
   let breakdown
   try {
     const response = await openai.chat.completions.create({
@@ -83,13 +99,20 @@ export const POST = withGuards(
         { role: 'user', content: `Language: ${language ?? 'German'}\nSentence: ${text}` },
       ],
       temperature: 0.2,
+      max_tokens: 2000,
     })
     breakdown = JSON.parse(response.choices[0].message.content ?? '{}')
+
+    // Record actual token usage against quota
+    if (userId && quotaPeriodStart) {
+      const total = (response.usage?.total_tokens ?? 0)
+      await recordUsage(userId, quotaPeriodStart, total)
+    }
   } catch {
     return NextResponse.json({ error: 'OpenAI error' }, { status: 500 })
   }
 
-  // 4a. Check for language/validity rejection from the model
+  // 5a. Check for language/validity rejection from the model
   if (breakdown.error === 'invalid_input') {
     return NextResponse.json(
       { error: 'INVALID_INPUT', message: breakdown.message ?? 'Please enter a valid sentence in the selected language.' },
@@ -97,7 +120,7 @@ export const POST = withGuards(
     )
   }
 
-  // 4b. Validate output schema before saving
+  // 5b. Validate output schema before saving
   const { valid, reason } = validateBreakdown(breakdown)
   if (!valid) {
     console.error(`[breakdown] Output validation failed for "${text}": ${reason}`)
@@ -107,7 +130,7 @@ export const POST = withGuards(
   const difficulty = breakdown.difficulty ?? 'Intermediate'
   const tags = Array.isArray(breakdown.tags) ? breakdown.tags : []
 
-  // 5. Save to DB
+  // 6. Save to DB
   const row: Record<string, unknown> = { breakdown, difficulty, tags, needs_refresh: false }
   if (original_id) row.original_id = original_id
   if (original_language) row.original_language = original_language

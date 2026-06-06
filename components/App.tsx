@@ -136,11 +136,12 @@ export default function App() {
       const res = await fetch('/api/breakdown', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sentence: input.trim(), language: inputLang }),
+        body: JSON.stringify({ sentence: input.trim(), language: inputLang, userId: user?.id ?? null }),
       })
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
         if (res.status === 422) throw new Error(body.message ?? "This doesn't look like a natural language sentence.")
+        if (res.status === 429 && body.error === 'QUOTA_EXCEEDED') throw new Error(body.message ?? 'Monthly token quota reached. Please try again next period.')
         throw new Error(body.error ?? 'Something went wrong. Please try again.')
       }
       const data = await res.json()

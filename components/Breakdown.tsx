@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useLayoutEffect } from 'react'
 import { Sentence, Topic } from '@/lib/types'
 import { supabase } from '@/lib/supabase'
 import WordEntry from './WordEntry'
@@ -316,17 +316,27 @@ export default function Breakdown({
 const PROP_FIELDS = ['case', 'gender', 'number', 'tense', 'person'] as const
 
 function WordTooltip({ word, x, y }: { word: import('@/lib/types').WordEntry; x: number; y: number }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [flipped, setFlipped] = useState(false)
+
+  useLayoutEffect(() => {
+    if (!ref.current) return
+    const height = ref.current.getBoundingClientRect().height
+    setFlipped(y - 8 - height < 8) // flip if tooltip would go above 8px from top
+  }, [y])
+
   const props = PROP_FIELDS
     .filter(k => word[k] != null && word[k] !== '')
     .map(k => [k, word[k] as string] as [string, string])
 
   return (
     <div
+      ref={ref}
       style={{
         position: 'fixed',
         left: x,
-        top: y - 8,
-        transform: 'translate(-50%, -100%)',
+        top: flipped ? y + 28 : y - 8,
+        transform: flipped ? 'translate(-50%, 0)' : 'translate(-50%, -100%)',
         zIndex: 90,
         background: 'var(--mist)',
         border: 'var(--border-hair)',

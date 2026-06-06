@@ -64,7 +64,14 @@ export default function ChatPanel({ sentence, userId }: Props) {
         body: JSON.stringify({ messages: newMessages, sentence, userId }),
       })
       const data = await res.json()
-      setMessages(m => [...m, { role: 'assistant', content: data.content }])
+      if (!res.ok) {
+        const msg = data.error === 'QUOTA_EXCEEDED'
+          ? (data.message ?? 'Monthly token quota reached.')
+          : 'Something went wrong. Please try again.'
+        setMessages(m => [...m, { role: 'assistant', content: msg }])
+      } else {
+        setMessages(m => [...m, { role: 'assistant', content: data.content }])
+      }
     } catch {
       setMessages(m => [...m, { role: 'assistant', content: 'Something went wrong. Please try again.' }])
     } finally {
