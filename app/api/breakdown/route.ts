@@ -89,7 +89,15 @@ export const POST = withGuards(
     return NextResponse.json({ error: 'OpenAI error' }, { status: 500 })
   }
 
-  // 4. Validate output schema before saving
+  // 4a. Check for language/validity rejection from the model
+  if (breakdown.error === 'invalid_input') {
+    return NextResponse.json(
+      { error: 'INVALID_INPUT', message: breakdown.message ?? 'Please enter a valid sentence in the selected language.' },
+      { status: 422 }
+    )
+  }
+
+  // 4b. Validate output schema before saving
   const { valid, reason } = validateBreakdown(breakdown)
   if (!valid) {
     console.error(`[breakdown] Output validation failed for "${text}": ${reason}`)
