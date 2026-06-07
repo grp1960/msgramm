@@ -192,11 +192,25 @@ export default function Breakdown({
             </button>
           )}
           <button
-            className="mg-action"
             aria-pressed={showFeedback ? 'true' : 'false'}
             onClick={() => { setShowFeedback(v => !v); setFeedbackStatus('idle') }}
+            style={{
+              fontFamily: 'var(--mono)',
+              fontSize: 'var(--t-mono-sm)',
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+              color: showFeedback ? 'var(--bone)' : 'var(--ink)',
+              background: showFeedback ? 'var(--ink)' : 'transparent',
+              border: '1.5px solid var(--ink)',
+              padding: '5px 12px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              transition: 'color 0.15s, background 0.15s',
+            }}
           >
-            Feedback
+            ⚑ Feedback
           </button>
         </div>
       </div>
