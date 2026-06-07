@@ -101,7 +101,7 @@ export async function checkQuota(
 
   // 4. Resolve period start
   const subscriptionStart: string =
-    profile.subscription_start ?? profile.created_at ?? new Date().toISOString().slice(0, 10)
+    profile.subscription_start ?? new Date().toISOString().slice(0, 10)
   const intervalDays: number = profile.subscription_interval_days ?? 30
   const periodStart = currentPeriodStart(subscriptionStart, intervalDays)
 
