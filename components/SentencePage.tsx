@@ -126,7 +126,7 @@ export default function SentencePage({ sentence, isNew }: { sentence: Sentence; 
           onSave={user ? handleSave : undefined}
           userTags={saved ? userTags : undefined}
           onUserTagsChange={saved ? updateUserTags : undefined}
-          onFeedback={() => setFeedbackScope('sentence')}
+          userId={user?.id ?? null}
         />
       </div>
 

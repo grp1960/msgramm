@@ -11,21 +11,24 @@ export const POST = withGuards(
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
-  const { scope, itemId, sentenceId, type, message, userId, email, mayFollowUp } = await req.json()
+  const { scope, itemId, sentenceId, type, message, userId, email, mayFollowUp, severity, sentenceText, breakdownSnapshot } = await req.json()
 
   if (!message?.trim()) {
     return NextResponse.json({ error: 'Message required' }, { status: 400 })
   }
 
   const { error } = await supabaseAdmin.from('feedback').insert({
-    scope:          scope ?? 'general',
-    item_id:        itemId ?? null,
-    sentence_id:    sentenceId ?? null,
-    type:           type ?? null,
-    message:        message.trim(),
-    user_id:        userId ?? null,
-    email:          email ?? null,
-    may_follow_up:  mayFollowUp ?? false,
+    scope:              scope ?? 'general',
+    item_id:            itemId ?? null,
+    sentence_id:        sentenceId ?? null,
+    type:               type ?? null,
+    message:            message.trim(),
+    user_id:            userId ?? null,
+    email:              email ?? null,
+    may_follow_up:      mayFollowUp ?? false,
+    severity:           severity ?? 'medium',
+    sentence_text:      sentenceText ?? null,
+    breakdown_snapshot: breakdownSnapshot ?? null,
   })
 
   if (error) {

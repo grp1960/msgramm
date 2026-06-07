@@ -11,11 +11,11 @@ type Props = {
   onSave?: () => void
   userTags?: string[]
   onUserTagsChange?: (tags: string[]) => void
-  onFeedback?: () => void
+  userId?: string | null
 }
 
 export default function Breakdown({
-  sentence, saved, onSave, userTags, onUserTagsChange, onFeedback,
+  sentence, saved, onSave, userTags, onUserTagsChange, userId,
 }: Props) {
   const [mode, setMode] = useState<'study' | 'quiz'>('study')
   const [hoveredId, setHoveredId] = useState<number | null>(null)
@@ -29,6 +29,42 @@ export default function Breakdown({
   const [revealed, setRevealed] = useState<Record<string, boolean>>({})
   const [topicByType, setTopicByType] = useState<Record<string, string>>({})
   const activeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // ── Feedback state ──
+  const [showFeedback, setShowFeedback] = useState(false)
+  const [feedbackText, setFeedbackText] = useState('')
+  const [feedbackSeverity, setFeedbackSeverity] = useState<'low' | 'medium' | 'high'>('medium')
+  const [feedbackStatus, setFeedbackStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+
+  async function submitFeedback() {
+    if (!feedbackText.trim()) return
+    setFeedbackStatus('sending')
+    try {
+      const res = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          scope: 'sentence',
+          sentenceId: sentence.id,
+          sentenceText: sentence.text,
+          breakdownSnapshot: sentence.breakdown,
+          message: feedbackText.trim(),
+          severity: feedbackSeverity,
+          userId: userId ?? null,
+        }),
+      })
+      if (!res.ok) throw new Error('Failed')
+      setFeedbackStatus('sent')
+      setTimeout(() => {
+        setShowFeedback(false)
+        setFeedbackText('')
+        setFeedbackSeverity('medium')
+        setFeedbackStatus('idle')
+      }, 1800)
+    } catch {
+      setFeedbackStatus('error')
+    }
+  }
 
   useEffect(() => {
     supabase.from('topics').select('slug, word_type').not('word_type', 'is', null)
@@ -155,11 +191,13 @@ export default function Breakdown({
               {saved ? 'Saved' : 'Save'}
             </button>
           )}
-          {onFeedback && (
-            <button className="mg-action" onClick={onFeedback}>
-              Report
-            </button>
-          )}
+          <button
+            className="mg-action"
+            aria-pressed={showFeedback ? 'true' : 'false'}
+            onClick={() => { setShowFeedback(v => !v); setFeedbackStatus('idle') }}
+          >
+            Feedback
+          </button>
         </div>
       </div>
 
@@ -200,6 +238,79 @@ export default function Breakdown({
           </button>
         </div>
       </div>
+
+      {/* ── Feedback panel ── */}
+      {showFeedback && (
+        <div style={{
+          borderTop: 'var(--border-rule)',
+          borderBottom: 'var(--border-rule)',
+          padding: '20px 0',
+          marginBottom: 2,
+        }}>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-40)', marginBottom: 12 }}>
+            Feedback
+          </div>
+          <textarea
+            value={feedbackText}
+            onChange={e => setFeedbackText(e.target.value)}
+            placeholder="What did you notice? Errors, confusing explanations, anything at all."
+            rows={3}
+            style={{
+              width: '100%',
+              fontFamily: 'var(--sans)',
+              fontSize: 14,
+              lineHeight: 1.5,
+              color: 'var(--ink)',
+              background: 'var(--bone)',
+              border: 'var(--border-rule)',
+              borderRadius: 0,
+              padding: '10px 12px',
+              resize: 'vertical',
+              boxSizing: 'border-box',
+              outline: 'none',
+            }}
+          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 10 }}>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-40)' }}>Severity</span>
+            {(['low', 'medium', 'high'] as const).map(s => (
+              <button
+                key={s}
+                onClick={() => setFeedbackSeverity(s)}
+                style={{
+                  fontFamily: 'var(--mono)',
+                  fontSize: '11px',
+                  letterSpacing: '0.06em',
+                  textTransform: 'uppercase',
+                  padding: '4px 10px',
+                  border: 'var(--border-rule)',
+                  borderColor: feedbackSeverity === s ? 'var(--ink)' : undefined,
+                  background: feedbackSeverity === s ? 'var(--ink)' : 'transparent',
+                  color: feedbackSeverity === s ? 'var(--bone)' : 'var(--ink-60)',
+                  cursor: 'pointer',
+                }}
+              >
+                {s}
+              </button>
+            ))}
+            <div style={{ marginLeft: 'auto', display: 'flex', gap: 10 }}>
+              <button
+                className="mg-action"
+                onClick={() => { setShowFeedback(false); setFeedbackText(''); setFeedbackSeverity('medium'); setFeedbackStatus('idle') }}
+              >
+                Cancel
+              </button>
+              <button
+                className="mg-action"
+                onClick={submitFeedback}
+                disabled={feedbackStatus === 'sending' || !feedbackText.trim()}
+                style={{ opacity: (!feedbackText.trim() || feedbackStatus === 'sending') ? 0.4 : 1 }}
+              >
+                {feedbackStatus === 'sending' ? 'Sending…' : feedbackStatus === 'sent' ? 'Sent ✓' : feedbackStatus === 'error' ? 'Error — retry' : 'Submit'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Filters ── */}
       <div className="mg-filters">
