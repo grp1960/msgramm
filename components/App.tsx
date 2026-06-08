@@ -204,7 +204,7 @@ export default function App() {
               <button onClick={() => setView('enter')} style={monoLink}>+ Enter a sentence</button>
             )}
             <Link href="/topics" style={monoLink}>Topics</Link>
-            <button onClick={() => setShowFeedback(true)} style={{ ...monoLink, background: 'transparent', border: 0, cursor: 'pointer' }}>Feedback</button>
+            <button onClick={() => setShowFeedback(true)} style={{ ...monoLink, background: 'transparent', border: '1.5px solid #E8742A', color: '#E8742A', padding: '3px 10px', cursor: 'pointer' }}>Feedback</button>
             {user ? (
               <button onClick={() => supabase.auth.signOut()} style={{ ...monoLink, background: 'transparent', border: 0, cursor: 'pointer' }}>Sign out</button>
             ) : (

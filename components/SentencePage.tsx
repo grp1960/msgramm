@@ -83,7 +83,7 @@ export default function SentencePage({ sentence, isNew }: { sentence: Sentence; 
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <Link href="/" style={monoNavLink}>← Sentences</Link>
             <Link href="/topics" style={monoNavLink}>Topics</Link>
-            <button onClick={() => setFeedbackScope('general')} style={{ ...monoNavLink, background: 'transparent', border: 0, cursor: 'pointer' }}>
+            <button onClick={() => setFeedbackScope('general')} style={{ ...monoNavLink, background: 'transparent', border: '1.5px solid #E8742A', color: '#E8742A', padding: '3px 10px', cursor: 'pointer' }}>
               Feedback
             </button>
             {user ? (
