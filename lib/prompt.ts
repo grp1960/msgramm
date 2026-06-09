@@ -18,7 +18,7 @@ APPROVED WORD TYPES — use these exact strings, nothing else:
 - Pronoun
 - Verb
 - Helper verb
-- Possibility verb
+- Modal verb
 - Noun
 - Article
 - Article contraction
@@ -36,7 +36,7 @@ WORD TYPE DEFINITIONS:
 - Pronoun: stands in for a noun — a person, thing, or idea already known from context
 - Verb: the main action or state in the sentence
 - Helper verb: works alongside a main verb to add tense or negation (is, was, did, have, had, has)
-- Possibility verb: adds likelihood, condition, or hypothetical (can, could, will, would, may, might, should, must)
+- Modal verb: adds likelihood, condition, or hypothetical (can, could, will, would, may, might, should, must)
 - Noun: a person, place, thing, or idea
 - Article: marks a noun — the, a, an; in German shows gender and case (der, die, das, dem, den, etc.)
 - Article contraction: a preposition and article fused into one word (German: am=an+dem, zum=zu+dem, im=in+dem, ins=in+das, etc.)
@@ -53,7 +53,7 @@ WORD TYPE DEFINITIONS:
 TERMINOLOGY RULES — apply only to the note, form, and job fields:
 - Write for a smart person with no linguistics training
 - NEVER use in note/form/job: subordinating conjunction, modal auxiliary, nominative, accusative, dative, counterfactual, adverbial modifier, past participle, lemma, inflection, morphology, syntax, infinitive, Präteritum, Imperfekt, coordinate conjunction
-- Instead say: completed form of [verb], possibility verb, time word, condition opener, object form, subject form
+- Instead say: completed form of [verb], modal verb, time word, condition opener, object form, subject form
 - For article contractions in any language: form = "From [preposition] + [article]", note why that preposition forces the case
 - For case in any language: explain it in terms of role (subject, object, destination, means) not case names
 - Apply all rules to whatever language is given — German, Latin, French, Spanish, etc.
@@ -66,8 +66,8 @@ WORD TRANSLATION RULE:
 BASE FORM RULE:
 - When a word doesn't resemble its dictionary form, show it: "From [base form]" or "Completed form of [base]"
 - Always apply to: contractions (didn't → did not), conjugated forms that look different (were → be), fused forms (zum → zu + dem)
-- For infinitives after a possibility verb: form = "Base form · no person — [possibility verb] carries it"
-- Split written contractions into separate word entries: "I'd" → "I" (Pronoun) + "'d" (Possibility verb: would); "it's" → "it" (Pronoun) + "'s" (Helper verb: is)
+- For infinitives after a modal verb: form = "Base form · no person — [modal verb] carries it"
+- Split written contractions into separate word entries: "I'd" → "I" (Pronoun) + "'d" (Modal verb: would); "it's" → "it" (Pronoun) + "'s" (Helper verb: is)
 
 VERB PERSON RULE:
 - For every verb and helper verb: state person (1st/2nd/3rd) and number (singular/plural) in the form field
@@ -80,7 +80,7 @@ QUIZ CHAIN FIELDS — strict rules, no exceptions:
 - "gender": MUST be included for every Noun, Article, Article contraction, and Pronoun. Use exactly one of: "Masculine", "Feminine", "Neuter". Do NOT omit even when the article already shows the gender — the noun needs it independently.
 - "number": MUST be included for every Noun and Pronoun. Use exactly "Singular" or "Plural".
 - "tense": MUST be included for every Verb and Helper verb. Use one of: "Present", "Past", "Perfect", "Pluperfect", "Future".
-- "person": MUST be included for every Verb, Helper verb, and Possibility verb. Use one of: "1st singular", "2nd singular", "3rd singular", "1st plural", "2nd plural", "3rd plural".
+- "person": MUST be included for every Verb, Helper verb, and Modal verb. Use one of: "1st singular", "2nd singular", "3rd singular", "1st plural", "2nd plural", "3rd plural".
 - "rationale": an object of short, rule-based explanations — one key per applicable field, plus "type":
   - "type": one sentence explaining why this word has this type
   - "case": why this case, stated as role (e.g. "Accusative — direct object of the verb")
@@ -92,6 +92,12 @@ QUIZ CHAIN FIELDS — strict rules, no exceptions:
   Omit any rationale key that does not apply to the word type.
 FIELD PLACEMENT: case/gender/number/tense/person MUST appear as direct fields on the word object. The rationale explains them — it does not replace them. NEVER write "N/A" — omit the field entirely if it does not apply.
 NOTE: The case/gender/number/tense/person fields use standard grammar terms as quiz answer labels. This is intentional and separate from the terminology rules that govern note/form/job fields.
+
+FOCUS CONCEPTS — when the user message includes a "Focus concepts:" line:
+- These are the grammar topics this sentence was chosen to illustrate
+- Orient the "explanation" field around those concepts — lead with them
+- Orient the "trap" field around a common error related to those concepts specifically
+- Do not ignore other grammar in the sentence, but make the focus concepts the primary lens
 
 JSON SCHEMA — return exactly this structure:
 {
@@ -108,7 +114,7 @@ JSON SCHEMA — return exactly this structure:
       "gender": "Masculine|Feminine|Neuter — REQUIRED for every Noun, Article, Article contraction, Pronoun",
       "number": "Singular|Plural — REQUIRED for every Noun and Pronoun",
       "tense": "Present|Past|Perfect|Pluperfect|Future — REQUIRED for every Verb and Helper verb",
-      "person": "1st singular|2nd singular|3rd singular|1st plural|2nd plural|3rd plural — REQUIRED for every Verb, Helper verb, Possibility verb",
+      "person": "1st singular|2nd singular|3rd singular|1st plural|2nd plural|3rd plural — REQUIRED for every Verb, Helper verb, Modal verb",
       "rationale": {"type": "...", "case": "...", "gender": "..."}
     }
   ],

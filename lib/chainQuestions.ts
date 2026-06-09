@@ -19,7 +19,7 @@ export const CHAIN_QUESTIONS: Record<string, ChainQuestion[]> = {
     { id: 'tense',  prompt: 'What tense?',             field: 'tense',  options: ['Present', 'Past', 'Perfect', 'Pluperfect', 'Future'] },
     { id: 'person', prompt: 'What person and number?', field: 'person', options: ['1st singular', '2nd singular', '3rd singular', '1st plural', '2nd plural', '3rd plural'] },
   ],
-  'Possibility verb': [
+  'Modal verb': [
     { id: 'person', prompt: 'What person and number?', field: 'person', options: ['1st singular', '2nd singular', '3rd singular', '1st plural', '2nd plural', '3rd plural'] },
   ],
   Article: [
