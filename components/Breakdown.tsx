@@ -117,7 +117,6 @@ export default function Breakdown({
     <>
       {/* ── Specimen ── */}
       <div className="mg-specimen-block">
-        <div className="mg-eyebrow">A sentence, broken down</div>
         <p className="mg-specimen">
           {words.map((w, i) => (
             <span key={w.wid}>
