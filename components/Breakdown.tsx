@@ -147,6 +147,26 @@ export default function Breakdown({
         {showTranslation && translation && (
           <p className="mg-translation">&ldquo;{translation}&rdquo;</p>
         )}
+        <div style={{ display: 'flex', gap: 20, marginTop: 16 }}>
+          <button
+            className="mg-switch"
+            role="switch"
+            aria-checked={showTranslation ? 'true' : 'false'}
+            onClick={() => setShowTranslation(v => !v)}
+          >
+            <span className="mg-switch-track"><span className="mg-switch-thumb" /></span>
+            Translate
+          </button>
+          <button
+            className="mg-switch"
+            role="switch"
+            aria-checked={showPeek ? 'true' : 'false'}
+            onClick={() => setShowPeek(v => !v)}
+          >
+            <span className="mg-switch-track"><span className="mg-switch-thumb" /></span>
+            Word Popups
+          </button>
+        </div>
         {showContext && (sentence.ctx_before || sentence.ctx_after) && (
           <div className="mg-context">
             {sentence.ctx_before && <span>{sentence.ctx_before} </span>}
@@ -229,26 +249,6 @@ export default function Breakdown({
             onClick={() => setMode('quiz')}
           >
             Quiz
-          </button>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-          <button
-            className="mg-switch"
-            role="switch"
-            aria-checked={showTranslation ? 'true' : 'false'}
-            onClick={() => setShowTranslation(v => !v)}
-          >
-            <span className="mg-switch-track"><span className="mg-switch-thumb" /></span>
-            Translate
-          </button>
-          <button
-            className="mg-switch"
-            role="switch"
-            aria-checked={showPeek ? 'true' : 'false'}
-            onClick={() => setShowPeek(v => !v)}
-          >
-            <span className="mg-switch-track"><span className="mg-switch-thumb" /></span>
-            Word Popups
           </button>
         </div>
       </div>

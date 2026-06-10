@@ -81,8 +81,7 @@ export default function SentencePage({ sentence, isNew }: { sentence: Sentence; 
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <Link href="/" style={monoNavLink}>← Sentences</Link>
-            <Link href="/topics" style={monoNavLink}>Topics</Link>
+<Link href="/topics" style={monoNavLink}>Topics</Link>
             <button onClick={() => setFeedbackScope('general')} style={{ ...monoNavLink, background: 'transparent', border: '1.5px solid #E8742A', color: '#E8742A', padding: '3px 10px', cursor: 'pointer' }}>
               Feedback
             </button>
@@ -97,6 +96,13 @@ export default function SentencePage({ sentence, isNew }: { sentence: Sentence; 
             )}
           </div>
         </header>
+
+        {/* ── Back nav ── */}
+        <div style={{ marginBottom: 24 }}>
+          <Link href="/" style={{ fontFamily: 'var(--mono)', fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-40)', textDecoration: 'none' }}>
+            ← Sentences
+          </Link>
+        </div>
 
         {/* ── Save button for freshly submitted sentences ── */}
         {isNew && (

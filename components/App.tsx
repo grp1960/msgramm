@@ -92,6 +92,7 @@ export default function App() {
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
   const [allSavedIds, setAllSavedIds] = useState<Set<string>>(new Set())
   const [showFeedback, setShowFeedback] = useState(false)
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     loadSentences()
@@ -307,14 +308,33 @@ export default function App() {
 
             {/* All / Built-in — grouped by difficulty */}
             {(listFilter === 'all' || listFilter === 'builtin') && (
-              DIFFICULTY_ORDER.filter(d => grouped[d]).map(d => (
-                <div key={d}>
-                  <div className="mg-eyebrow" style={{ marginTop: 48, marginBottom: 0 }}>{d}</div>
-                  {grouped[d]!.map(s => (
-                    <SentenceRow key={s.id} s={s} onClick={() => openSentence(s)} saved={savedIds.has(s.id)} />
-                  ))}
-                </div>
-              ))
+              DIFFICULTY_ORDER.filter(d => grouped[d]).map(d => {
+                const isCollapsed = collapsed.has(d)
+                return (
+                  <div key={d}>
+                    <button
+                      onClick={() => setCollapsed(prev => {
+                        const next = new Set(prev)
+                        next.has(d) ? next.delete(d) : next.add(d)
+                        return next
+                      })}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 8,
+                        background: 'none', border: 0, cursor: 'pointer',
+                        padding: '0', marginTop: 48, marginBottom: 0,
+                      }}
+                    >
+                      <span className="mg-eyebrow" style={{ marginTop: 0, marginBottom: 0 }}>{d}</span>
+                      <span style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--ink-40)', marginTop: 2 }}>
+                        {isCollapsed ? '▸' : '▾'}
+                      </span>
+                    </button>
+                    {!isCollapsed && grouped[d]!.map(s => (
+                      <SentenceRow key={s.id} s={s} onClick={() => openSentence(s)} saved={savedIds.has(s.id)} />
+                    ))}
+                  </div>
+                )
+              })
             )}
 
             {/* Personal */}
@@ -432,7 +452,7 @@ function SentenceRow({ s, onClick, saved }: { s: Sentence; onClick: () => void; 
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
         {saved && (
           <span style={{ fontFamily: 'var(--mono)', fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-40)' }}>
-            Saved
+            Mine
           </span>
         )}
         {s.difficulty && (
