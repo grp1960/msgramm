@@ -148,24 +148,28 @@ export default function Breakdown({
           <p className="mg-translation">&ldquo;{translation}&rdquo;</p>
         )}
         <div style={{ display: 'flex', gap: 20, marginTop: 16 }}>
-          <button
-            className="mg-switch"
-            role="switch"
-            aria-checked={showTranslation ? 'true' : 'false'}
-            onClick={() => setShowTranslation(v => !v)}
-          >
-            <span className="mg-switch-track"><span className="mg-switch-thumb" /></span>
-            Translate
-          </button>
-          <button
-            className="mg-switch"
-            role="switch"
-            aria-checked={showPeek ? 'true' : 'false'}
-            onClick={() => setShowPeek(v => !v)}
-          >
-            <span className="mg-switch-track"><span className="mg-switch-thumb" /></span>
-            Word Popups
-          </button>
+          <Tip text="Show the English translation of the sentence">
+            <button
+              className="mg-switch"
+              role="switch"
+              aria-checked={showTranslation ? 'true' : 'false'}
+              onClick={() => setShowTranslation(v => !v)}
+            >
+              <span className="mg-switch-track"><span className="mg-switch-thumb" /></span>
+              Translate
+            </button>
+          </Tip>
+          <Tip text="Show a details popup when you hover over a word">
+            <button
+              className="mg-switch"
+              role="switch"
+              aria-checked={showPeek ? 'true' : 'false'}
+              onClick={() => setShowPeek(v => !v)}
+            >
+              <span className="mg-switch-track"><span className="mg-switch-thumb" /></span>
+              Word Popups
+            </button>
+          </Tip>
         </div>
         {showContext && (sentence.ctx_before || sentence.ctx_after) && (
           <div className="mg-context">
@@ -594,4 +598,29 @@ const tagChip: React.CSSProperties = {
   padding: '3px 10px',
   background: 'var(--bone-d)',
   color: 'var(--ink-60)',
+}
+
+function Tip({ text, children }: { text: string; children: React.ReactNode }) {
+  const [visible, setVisible] = useState(false)
+  return (
+    <span
+      style={{ position: 'relative', display: 'inline-flex' }}
+      onMouseEnter={() => setVisible(true)}
+      onMouseLeave={() => setVisible(false)}
+    >
+      {children}
+      {visible && (
+        <span style={{
+          position: 'absolute', bottom: 'calc(100% + 6px)', left: '50%',
+          transform: 'translateX(-50%)',
+          background: 'var(--ink)', color: 'var(--bone)',
+          fontFamily: 'var(--sans)', fontSize: '12px', lineHeight: 1.4,
+          padding: '5px 10px', whiteSpace: 'nowrap',
+          pointerEvents: 'none', zIndex: 100,
+        }}>
+          {text}
+        </span>
+      )}
+    </span>
+  )
 }
