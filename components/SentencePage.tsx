@@ -129,7 +129,7 @@ export default function SentencePage({ sentence, isNew }: { sentence: Sentence; 
         <Breakdown
           sentence={sentence}
           saved={saved}
-          onSave={user ? handleSave : undefined}
+          onSave={isNew && user ? handleSave : undefined}
           userTags={saved ? userTags : undefined}
           onUserTagsChange={saved ? updateUserTags : undefined}
           userId={user?.id ?? null}
