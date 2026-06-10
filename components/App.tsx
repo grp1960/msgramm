@@ -17,6 +17,7 @@ const TAXONOMY = [
     concepts: [
       { id: 'separable-verbs',  label: 'Separable Verbs' },
       { id: 'konjunktiv-ii',   label: 'Konjunktiv II' },
+      { id: 'konjunktiv-i',    label: 'Konjunktiv I' },
       { id: 'modal-verbs',     label: 'Modal Verbs' },
       { id: 'passive-voice',   label: 'Passive Voice' },
       { id: 'reflexive-verbs', label: 'Reflexive Verbs' },
