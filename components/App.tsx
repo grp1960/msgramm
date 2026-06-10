@@ -325,7 +325,7 @@ export default function App() {
                       }}
                     >
                       <span className="mg-eyebrow" style={{ marginTop: 0, marginBottom: 0 }}>{d}</span>
-                      <span style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--ink-40)', marginTop: 2 }}>
+                      <span style={{ fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--ink)', marginTop: 2 }}>
                         {isCollapsed ? '▸' : '▾'}
                       </span>
                     </button>
