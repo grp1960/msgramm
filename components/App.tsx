@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Sentence, Difficulty } from '@/lib/types'
 import { supabase } from '@/lib/supabase'
-import { LANGUAGES } from '@/lib/languages'
 import type { User } from '@supabase/supabase-js'
 import Link from 'next/link'
 import AuthModal from './AuthModal'
@@ -74,17 +73,16 @@ const TAXONOMY = [
 ]
 
 type View = 'list' | 'enter'
-type ListFilter = 'all' | 'mine'
+type ListFilter = 'all' | 'builtin' | 'personal'
 
 export default function App() {
   const router = useRouter()
   const [view, setView] = useState<View>('list')
   const [sentences, setSentences] = useState<Sentence[]>([])
-  const [listFilter, setListFilter] = useState<ListFilter>('all')
-  const [langFilter, setLangFilter] = useState<string>('all')
+  const [listFilter, setListFilter] = useState<ListFilter>('builtin')
   const [conceptFilter, setConceptFilter] = useState<string | null>(null)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
-  const [inputLang, setInputLang] = useState<string>(LANGUAGES[0].code)
+  const [inputLang] = useState<string>('de')
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -92,10 +90,12 @@ export default function App() {
   const [showAuth, setShowAuth] = useState(false)
   const [savedList, setSavedList] = useState<Sentence[]>([])
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
+  const [allSavedIds, setAllSavedIds] = useState<Set<string>>(new Set())
   const [showFeedback, setShowFeedback] = useState(false)
 
   useEffect(() => {
     loadSentences()
+    loadAllSaved()
     supabase.auth.getUser().then(({ data }) => setUser(data.user))
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
       setUser(session?.user ?? null)
@@ -113,6 +113,11 @@ export default function App() {
       .select('*')
       .order('created_at', { ascending: true })
     if (data) setSentences(data as Sentence[])
+  }
+
+  async function loadAllSaved() {
+    const { data } = await supabase.from('saved_sentences').select('sentence_id')
+    if (data) setAllSavedIds(new Set(data.map((r: any) => r.sentence_id)))
   }
 
   async function loadSaved() {
@@ -162,9 +167,11 @@ export default function App() {
     router.push('/sentences/' + s.id)
   }
 
-  const sourceList = listFilter === 'mine' ? savedList : sentences
+  const sourceList =
+    listFilter === 'personal' ? savedList :
+    listFilter === 'builtin'  ? sentences.filter(s => !allSavedIds.has(s.id)) :
+    sentences
   const visibleSentences = sourceList
-    .filter(s => langFilter === 'all' || s.language === langFilter)
     .filter(s => !conceptFilter || (s.concepts ?? []).includes(conceptFilter))
 
   const grouped = DIFFICULTY_ORDER.reduce((acc, d) => {
@@ -173,7 +180,6 @@ export default function App() {
     return acc
   }, {} as Partial<Record<Difficulty, Sentence[]>>)
 
-  const displaySentences = visibleSentences
 
   return (
     <>
@@ -216,30 +222,23 @@ export default function App() {
         {/* ── List view ── */}
         {view === 'list' && (
           <div>
-            {/* Toolbar: All/Mine + language filter */}
+            {/* Toolbar: All / Built-in / Personal */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 40, flexWrap: 'wrap' }}>
-              {user && (
-                <div className="mg-mode-toggle">
-                  {(['all', 'mine'] as const).map(f => (
-                    <button
-                      key={f}
-                      aria-pressed={listFilter === f ? 'true' : 'false'}
-                      onClick={() => setListFilter(f)}
-                    >
-                      {f === 'all' ? 'All' : 'Mine'}
-                    </button>
-                  ))}
-                </div>
-              )}
-              <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                {[{ code: 'all', label: 'All languages' }, ...LANGUAGES].map(({ code, label }) => (
+              <div className="mg-mode-toggle">
+                {([
+                  { key: 'all',      label: 'All' },
+                  { key: 'builtin',  label: 'Core' },
+                  { key: 'personal', label: 'Mine' },
+                ] as const).map(f => (
                   <button
-                    key={code}
-                    className="mg-filter"
-                    aria-pressed={langFilter === code ? 'true' : 'false'}
-                    onClick={() => setLangFilter(code)}
+                    key={f.key}
+                    aria-pressed={listFilter === f.key ? 'true' : 'false'}
+                    onClick={() => {
+                      if (f.key === 'personal' && !user) { setShowAuth(true); return }
+                      setListFilter(f.key)
+                    }}
                   >
-                    {label}
+                    {f.label}
                   </button>
                 ))}
               </div>
@@ -306,8 +305,8 @@ export default function App() {
               })()}
             </div>
 
-            {/* All — grouped by difficulty */}
-            {listFilter === 'all' && (
+            {/* All / Built-in — grouped by difficulty */}
+            {(listFilter === 'all' || listFilter === 'builtin') && (
               DIFFICULTY_ORDER.filter(d => grouped[d]).map(d => (
                 <div key={d}>
                   <div className="mg-eyebrow" style={{ marginTop: 48, marginBottom: 0 }}>{d}</div>
@@ -318,15 +317,15 @@ export default function App() {
               ))
             )}
 
-            {/* Mine */}
-            {listFilter === 'mine' && (
-              displaySentences.length === 0 ? (
+            {/* Personal */}
+            {listFilter === 'personal' && (
+              visibleSentences.length === 0 ? (
                 <p style={{ fontFamily: 'var(--mono)', fontSize: '13px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ink-40)', marginTop: 48 }}>
-                  No saved sentences yet.
+                  No personal sentences yet. Use + Enter a sentence to add one.
                 </p>
               ) : (
                 <div style={{ marginTop: 8 }}>
-                  {displaySentences.map(s => (
+                  {visibleSentences.map(s => (
                     <SentenceRow key={s.id} s={s} onClick={() => openSentence(s)} saved />
                   ))}
                 </div>
@@ -339,20 +338,6 @@ export default function App() {
         {view === 'enter' && (
           <div style={{ maxWidth: 680 }}>
             <div className="mg-eyebrow" style={{ marginBottom: 32 }}>Break down a sentence</div>
-
-            {/* Language picker */}
-            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 24 }}>
-              {LANGUAGES.map(l => (
-                <button
-                  key={l.code}
-                  className="mg-filter"
-                  aria-pressed={inputLang === l.code ? 'true' : 'false'}
-                  onClick={() => setInputLang(l.code)}
-                >
-                  {l.label}
-                </button>
-              ))}
-            </div>
 
             {/* Textarea */}
             <textarea
@@ -407,7 +392,6 @@ export default function App() {
 
 function SentenceRow({ s, onClick, saved }: { s: Sentence; onClick: () => void; saved?: boolean }) {
   const [hover, setHover] = useState(false)
-  const langLabel = LANGUAGES.find(l => l.code === s.language)?.label ?? s.language
 
   return (
     <button
@@ -456,9 +440,6 @@ function SentenceRow({ s, onClick, saved }: { s: Sentence; onClick: () => void; 
             {s.difficulty}
           </span>
         )}
-        <span style={{ fontFamily: 'var(--mono)', fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-60)' }}>
-          {langLabel}
-        </span>
       </div>
     </button>
   )

@@ -12,7 +12,7 @@ const APPROVED_TYPES = new Set([
   'Pronoun', 'Verb', 'Helper verb', 'Modal verb', 'Noun',
   'Article', 'Article contraction', 'Preposition', 'Reason connector',
   'Condition opener', 'Negation', 'Pointing word', 'Time word',
-  'Conjunction', 'Adverb', 'Adjective',
+  'Conjunction', 'Adverb', 'Adjective', 'Punctuation',
 ])
 
 // ─── Output schema validator ───────────────────────────────────────────────

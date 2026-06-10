@@ -15,6 +15,7 @@ export const BADGE_COLORS: Record<string, { bg: string; color: string }> = {
   'Conjunction':          { bg: '#F0EEF8', color: '#4A3A7A' },
   'Adverb':               { bg: '#EEF8F8', color: '#1A5C5C' },
   'Adjective':            { bg: '#FFF0F5', color: '#8B2252' },
+  'Punctuation':          { bg: '#F5F5F5', color: '#888888' },
 }
 
 export const HIGHLIGHT_COLORS: Record<string, { bg: string; color: string }> = {
@@ -34,6 +35,7 @@ export const HIGHLIGHT_COLORS: Record<string, { bg: string; color: string }> = {
   'Conjunction':          { bg: '#C0BAE8', color: '#251050' },
   'Adverb':               { bg: '#A8D8D8', color: '#0A3A3A' },
   'Adjective':            { bg: '#F0A0C0', color: '#5A0A30' },
+  'Punctuation':          { bg: '#E8E8E8', color: '#666666' },
 }
 
 export const GLOSSARY: Record<string, string> = {
@@ -53,4 +55,5 @@ export const GLOSSARY: Record<string, string> = {
   'Conjunction': 'Connects two clauses or words — and, but, or.',
   'Adverb': 'Modifies a verb or adjective — changes its degree or manner.',
   'Adjective': 'Describes a noun — tells you what it is like.',
+  'Punctuation': 'A comma, period, or other mark that signals structure — in German, commas are grammatically required at clause boundaries.',
 }

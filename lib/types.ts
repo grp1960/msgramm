@@ -27,6 +27,7 @@ export type Breakdown = {
 export type TopicBlock =
   | { type: 'paragraph'; data: { text: string } }
   | { type: 'header'; data: { text: string; level: number } }
+  | { type: 'table'; data: { headers: string[]; rows: string[][] } }
 
 export type Topic = {
   id: string

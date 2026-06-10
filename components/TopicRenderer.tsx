@@ -27,6 +27,40 @@ export default function TopicRenderer({ blocks }: { blocks: TopicBlock[] }) {
             />
           )
         }
+        if (block.type === 'table') {
+          return (
+            <div key={i} style={{ overflowX: 'auto', marginBottom: 20 }}>
+              <table style={{ borderCollapse: 'collapse', fontSize: '0.88rem', width: '100%' }}>
+                <thead>
+                  <tr>
+                    {block.data.headers.map((h, j) => (
+                      <th key={j} style={{
+                        background: '#1B3A5C', color: '#fff',
+                        padding: '7px 12px', textAlign: 'left',
+                        fontWeight: 600, whiteSpace: 'nowrap',
+                      }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {block.data.rows.map((row, j) => (
+                    <tr key={j} style={{ background: j % 2 === 0 ? '#F7F9FB' : '#fff' }}>
+                      {row.map((cell, k) => (
+                        <td key={k} style={{
+                          padding: '6px 12px',
+                          borderBottom: '1px solid #E0E6ED',
+                          fontWeight: k === 0 ? 600 : 400,
+                          color: k === 0 ? '#1B3A5C' : '#333',
+                          whiteSpace: 'nowrap',
+                        }} dangerouslySetInnerHTML={{ __html: cell }} />
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
+        }
         return null
       })}
     </div>

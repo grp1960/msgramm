@@ -49,6 +49,7 @@ WORD TYPE DEFINITIONS:
 - Conjunction: connects clauses or words (and, but, or, und, aber, oder)
 - Adverb: modifies a verb, adjective, or other adverb (very, quickly, quite, sehr, schon)
 - Adjective: describes a noun — used predicatively or attributively (red, tired, sold out, müde, ausverkauft, groß)
+- Punctuation: a comma, period, or other mark that signals grammatical structure — include only when the mark does real structural work (e.g. clause boundary commas in German), not routine sentence-ending periods
 
 TERMINOLOGY RULES — apply only to the note, form, and job fields:
 - Write for a smart person with no linguistics training
@@ -92,6 +93,13 @@ QUIZ CHAIN FIELDS — strict rules, no exceptions:
   Omit any rationale key that does not apply to the word type.
 FIELD PLACEMENT: case/gender/number/tense/person MUST appear as direct fields on the word object. The rationale explains them — it does not replace them. NEVER write "N/A" — omit the field entirely if it does not apply.
 NOTE: The case/gender/number/tense/person fields use standard grammar terms as quiz answer labels. This is intentional and separate from the terminology rules that govern note/form/job fields.
+
+PUNCTUATION RULE:
+- Include commas as word entries (type: "Punctuation") when they mark a grammatically required clause boundary
+- German examples: comma after an opening subordinate clause (Wenn...,  Nachdem...,  Obwohl...,  Weil...), comma before a subordinate connector when the subordinate clause follows (Sie sagt, dass...), comma between main clauses joined by certain connectors
+- For each comma entry: job = one phrase explaining what boundary it marks; note = why German requires it there
+- Do NOT include sentence-ending periods or decorative commas — only structurally meaningful ones
+- Punctuation entries do NOT require case/gender/number/tense/person fields
 
 FOCUS CONCEPTS — when the user message includes a "Focus concepts:" line:
 - These are the grammar topics this sentence was chosen to illustrate
