@@ -25,7 +25,7 @@ export default function Breakdown({
   const [showContext, setShowContext] = useState(false)
   const [showPeek, setShowPeek] = useState(true)
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null)
-  const [showLexicon, setShowLexicon] = useState(true)
+  const [showLexicon, setShowLexicon] = useState(false)
   const [revealed, setRevealed] = useState<Record<string, boolean>>({})
   const [topicByType, setTopicByType] = useState<Record<string, string>>({})
   const activeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -329,68 +329,79 @@ export default function Breakdown({
         </div>
       )}
 
-      {/* ── Filters ── */}
-      <div className="mg-filters">
-        <span className="mg-filters-label">Filter</span>
-        <button
-          className="mg-filter"
-          aria-pressed={filter === 'all' ? 'true' : 'false'}
-          onClick={() => setFilter('all')}
-        >
-          All
-        </button>
-        {types.map(type => {
-          const count = words.filter(w => w.type === type).length
-          return (
-            <button
-              key={type}
-              className="mg-filter"
-              aria-pressed={filter === type ? 'true' : 'false'}
-              onClick={() => setFilter(filter === type ? 'all' : type)}
-            >
-              {type}<span className="count">{count}</span>
-            </button>
-          )
-        })}
-        <button
-          onClick={() => setShowLexicon(v => !v)}
-          style={{
-            marginLeft: 'auto',
-            fontFamily: 'var(--mono)',
-            fontSize: 'var(--t-mono-xs)',
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-            color: 'var(--ink-40)',
-            background: 'transparent',
-            border: 0,
-            cursor: 'pointer',
-            padding: '6px 0',
-          }}
-        >
-          {showLexicon ? '↑ Collapse' : '↓ Expand'}
-        </button>
-      </div>
+      {/* ── Word breakdown toggle ── */}
+      <button
+        onClick={() => setShowLexicon(v => !v)}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          width: '100%',
+          background: 'transparent',
+          border: 0,
+          borderTop: 'var(--border-rule)',
+          borderBottom: showLexicon ? 'none' : 'var(--border-rule)',
+          padding: '12px 0',
+          cursor: 'pointer',
+          textAlign: 'left',
+        }}
+      >
+        <span style={{ fontFamily: 'var(--mono)', fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-60)' }}>
+          Word breakdown
+        </span>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: '11px', letterSpacing: '0.08em', color: 'var(--ink-30)', marginLeft: 10 }}>
+          {words.length} words
+        </span>
+        <span style={{ marginLeft: 'auto', fontSize: '16px', color: 'var(--ink-60)', lineHeight: 1 }}>
+          {showLexicon ? '▾' : '▸'}
+        </span>
+      </button>
 
-      {/* ── Lexicon ── */}
+      {/* ── Filters + Lexicon (visible when expanded) ── */}
       {showLexicon && (
-        <div className="mg-entries">
-          {filtered.map(w => (
-            <div key={w.wid} id={`entry-${w.wid}`}>
-              <WordEntry
-                entry={w}
-                mode={mode}
-                isHovered={hoveredId === w.wid}
-                isActive={activeId === w.wid}
-                revealed={revealed}
-                topicSlug={topicByType[w.type]}
-                onMouseEnter={() => setHoveredId(w.wid)}
-                onMouseLeave={() => setHoveredId(null)}
-                onReveal={toggleReveal}
-                onRevealAll={() => revealAll(w.wid)}
-              />
-            </div>
-          ))}
-        </div>
+        <>
+          <div className="mg-filters" style={{ borderTop: 'none' }}>
+            <span className="mg-filters-label">Filter</span>
+            <button
+              className="mg-filter"
+              aria-pressed={filter === 'all' ? 'true' : 'false'}
+              onClick={() => setFilter('all')}
+            >
+              All
+            </button>
+            {types.map(type => {
+              const count = words.filter(w => w.type === type).length
+              return (
+                <button
+                  key={type}
+                  className="mg-filter"
+                  aria-pressed={filter === type ? 'true' : 'false'}
+                  onClick={() => setFilter(filter === type ? 'all' : type)}
+                >
+                  {type}<span className="count">{count}</span>
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="mg-entries">
+            {filtered.map(w => (
+              <div key={w.wid} id={`entry-${w.wid}`}>
+                <WordEntry
+                  entry={w}
+                  mode={mode}
+                  isHovered={hoveredId === w.wid}
+                  isActive={activeId === w.wid}
+                  revealed={revealed}
+                  topicSlug={topicByType[w.type]}
+                  onMouseEnter={() => setHoveredId(w.wid)}
+                  onMouseLeave={() => setHoveredId(null)}
+                  onReveal={toggleReveal}
+                  onRevealAll={() => revealAll(w.wid)}
+                />
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {/* ── Insight Band ── */}
