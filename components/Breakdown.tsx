@@ -348,10 +348,10 @@ export default function Breakdown({
         <span style={{ fontSize: '16px', color: 'var(--ink-60)', lineHeight: 1, marginRight: 10 }}>
           {showLexicon ? '▾' : '▸'}
         </span>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-60)' }}>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: '14px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ink-60)' }}>
           Word breakdown
         </span>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: '11px', letterSpacing: '0.08em', color: 'var(--ink-30)', marginLeft: 10 }}>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: '13px', color: 'var(--ink-30)', marginLeft: 10 }}>
           {words.length} words
         </span>
       </button>
