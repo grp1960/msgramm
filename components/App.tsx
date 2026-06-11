@@ -31,8 +31,6 @@ const TAXONOMY = [
       { id: 'case-accusative', label: 'Accusative' },
       { id: 'case-dative',     label: 'Dative' },
       { id: 'case-genitive',   label: 'Genitive' },
-      { id: 'noun-gender',     label: 'Gender' },
-      { id: 'pluralisation',   label: 'Pluralisation' },
     ],
   },
   {
@@ -48,8 +46,6 @@ const TAXONOMY = [
     category: 'Adjectives',
     concepts: [
       { id: 'adjective-declension', label: 'Declension' },
-      { id: 'adjective-comparison', label: 'Comparison' },
-      { id: 'adverbs',              label: 'Adverbs' },
     ],
   },
   {
@@ -68,7 +64,6 @@ const TAXONOMY = [
       { id: 'subordinate-clauses',       label: 'Subordinate Clauses' },
       { id: 'coordinating-conjunctions', label: 'Coord. Conjunctions' },
       { id: 'negation',                  label: 'Negation' },
-      { id: 'tekamolo',                  label: 'TeKaMoLo' },
     ],
   },
 ]
