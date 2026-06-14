@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { notFound } from 'next/navigation'
 import { Sentence } from '@/lib/types'
-import { BADGE_COLORS } from '@/lib/wordTypes'
+import { BADGE_COLORS, HIGHLIGHT_COLORS } from '@/lib/wordTypes'
 
 async function getSentence(id: string): Promise<Sentence | null> {
   const supabase = createClient(
@@ -76,6 +76,7 @@ export default async function CardPage({ params }: { params: Promise<{ id: strin
       }}>
         {capped.map(w => {
           const colors = BADGE_COLORS[w.type] ?? { bg: '#F0F0F0', color: '#666' }
+          const accent = (HIGHLIGHT_COLORS[w.type] ?? { bg: '#CCCCCC' }).bg
           const props = (['case', 'gender', 'number', 'tense', 'person'] as const)
             .filter(k => w[k])
             .map(k => w[k] as string)
@@ -83,6 +84,7 @@ export default async function CardPage({ params }: { params: Promise<{ id: strin
             <div key={w.wid} style={{
               background: '#FFFFFF',
               border: '1px solid #E8E8E4',
+              borderLeft: `4px solid ${accent}`,
               padding: '12px 14px',
               display: 'flex',
               flexDirection: 'column',
@@ -119,6 +121,22 @@ export default async function CardPage({ params }: { params: Promise<{ id: strin
               {props.length > 0 && (
                 <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: '#AAAAAA', letterSpacing: '0.04em', marginTop: 2 }}>
                   {props.join(' · ')}
+                </div>
+              )}
+              {/* Job */}
+              {w.job && (
+                <div style={{
+                  fontFamily: 'var(--sans)',
+                  fontSize: 11,
+                  color: '#8A8A9A',
+                  lineHeight: 1.4,
+                  marginTop: 2,
+                  overflow: 'hidden',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                }}>
+                  {w.job}
                 </div>
               )}
             </div>
