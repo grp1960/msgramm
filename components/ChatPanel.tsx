@@ -61,7 +61,7 @@ export default function ChatPanel({ sentence, userId }: Props) {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: newMessages, sentence, userId }),
+        body: JSON.stringify({ messages: newMessages, sentence, userId, lastMessage: input.trim() }),
       })
       const data = await res.json()
       if (!res.ok) {

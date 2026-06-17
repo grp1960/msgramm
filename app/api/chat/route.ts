@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 import { createClient } from '@supabase/supabase-js'
-import { withGuards, rateLimitGuard } from '@/lib/guards'
+import { withGuards, rateLimitGuard, heuristicGuard, llmGuard } from '@/lib/guards'
 import { checkQuota, recordUsage } from '@/lib/quota'
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
@@ -13,6 +13,8 @@ const supabaseAdmin = createClient(
 
 export const POST = withGuards(
   rateLimitGuard({ limit: 100, windowSecs: 86400, keyPrefix: 'chat' }),
+  heuristicGuard({ field: 'lastMessage' }),
+  llmGuard({ field: 'lastMessage' }),
 )(async (req: NextRequest): Promise<NextResponse> => {
   const { messages, sentence, userId } = await req.json()
 
