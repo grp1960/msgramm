@@ -80,7 +80,9 @@ export default function App() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [inputLang] = useState<string>('de')
   const [input, setInput] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [phase, setPhase] = useState<'idle' | 'checking' | 'correcting' | 'loading'>('idle')
+  const [corrections, setCorrections] = useState<{ found: string; corrected: string; why: string }[]>([])
+  const [correctedSentence, setCorrectedSentence] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [user, setUser] = useState<User | null>(null)
   const [showAuth, setShowAuth] = useState(false)
@@ -131,14 +133,47 @@ export default function App() {
   }
 
   async function submit() {
-    if (input.trim().length < 4) return
-    setLoading(true)
+    const text = input.trim()
+    if (text.length < 4) return
     setError(null)
+    setPhase('checking')
+    try {
+      // 1. Check for errors first
+      const checkRes = await fetch('/api/check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sentence: text }),
+      })
+      const check = await checkRes.json()
+
+      if (check.status === 'invalid') {
+        setError(check.message ?? "This doesn't look like a valid German sentence.")
+        setPhase('idle')
+        return
+      }
+
+      if (check.status === 'has_errors') {
+        setCorrections(check.errors ?? [])
+        setCorrectedSentence(check.corrected_sentence ?? text)
+        setPhase('correcting')
+        return
+      }
+
+      // Clean — proceed to breakdown
+      await runBreakdown(text)
+    } catch (e: any) {
+      setError(e.message ?? 'Something went wrong. Please try again.')
+      setPhase('idle')
+    }
+  }
+
+  async function runBreakdown(text: string) {
+    setPhase('loading')
     try {
       const res = await fetch('/api/breakdown', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sentence: input.trim(), language: inputLang, userId: user?.id ?? null }),
+        body: JSON.stringify({ sentence: text, language: inputLang, userId: user?.id ?? null }),
       })
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
@@ -151,8 +186,7 @@ export default function App() {
       router.push('/sentences/' + data.id + '?new=1' + unsaved)
     } catch (e: any) {
       setError(e.message ?? 'Something went wrong. Please try again.')
-    } finally {
-      setLoading(false)
+      setPhase('idle')
     }
   }
 
@@ -182,7 +216,7 @@ export default function App() {
       )}
 
       {/* Loading overlay */}
-      {loading && <BreakdownLoader sentence={input} />}
+      {(phase === 'loading' || phase === 'checking') && <BreakdownLoader sentence={input} />}
 
       <div className="mg-shell">
 
@@ -354,7 +388,7 @@ export default function App() {
             {/* Textarea */}
             <textarea
               value={input}
-              onChange={e => setInput(e.target.value)}
+              onChange={e => { setInput(e.target.value); if (phase === 'correcting') setPhase('idle') }}
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit() } }}
               placeholder="e.g. Er hatte das Buch schon gelesen, bevor sie ankam."
               maxLength={300}
@@ -379,21 +413,68 @@ export default function App() {
               )}
             </div>
 
-            <button
-              onClick={submit}
-              disabled={loading || input.trim().length < 4}
-              style={{
-                marginTop: 28,
-                fontFamily: 'var(--mono)', fontSize: '13px', letterSpacing: '0.08em',
-                textTransform: 'uppercase',
-                background: loading || input.trim().length < 4 ? 'var(--ink-20)' : 'var(--ink)',
-                color: 'var(--bone)', border: 0,
-                padding: '12px 28px', cursor: loading || input.trim().length < 4 ? 'default' : 'pointer',
-                transition: 'background var(--dur-fast) var(--ease)',
-              }}
-            >
-              Break it down
-            </button>
+            {/* Correction panel */}
+            {phase === 'correcting' && corrections.length > 0 && (
+              <div style={{
+                marginTop: 24,
+                borderTop: 'var(--border-rule)',
+                paddingTop: 20,
+              }}>
+                <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-40)', marginBottom: 14 }}>
+                  We found {corrections.length} issue{corrections.length !== 1 ? 's' : ''}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+                  {corrections.map((c, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'baseline', gap: 10, fontFamily: 'var(--sans)', fontSize: 14 }}>
+                      <span style={{ color: '#8B3A3A', textDecoration: 'line-through', whiteSpace: 'nowrap' }}>{c.found}</span>
+                      <span style={{ color: 'var(--ink-40)' }}>→</span>
+                      <span style={{ color: 'var(--ink)', fontWeight: 500, whiteSpace: 'nowrap' }}>{c.corrected}</span>
+                      <span style={{ color: 'var(--ink-40)', fontSize: 13 }}>— {c.why}</span>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                  <button
+                    onClick={() => runBreakdown(correctedSentence)}
+                    style={{
+                      fontFamily: 'var(--mono)', fontSize: '13px', letterSpacing: '0.08em',
+                      textTransform: 'uppercase', background: 'var(--ink)', color: 'var(--bone)',
+                      border: 0, padding: '12px 28px', cursor: 'pointer',
+                    }}
+                  >
+                    Make corrections
+                  </button>
+                  <button
+                    onClick={() => runBreakdown(input.trim())}
+                    style={{
+                      fontFamily: 'var(--mono)', fontSize: '13px', letterSpacing: '0.08em',
+                      textTransform: 'uppercase', background: 'transparent', color: 'var(--ink-40)',
+                      border: 0, padding: '12px 0', cursor: 'pointer',
+                    }}
+                  >
+                    Analyse as written
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {phase !== 'correcting' && (
+              <button
+                onClick={submit}
+                disabled={phase !== 'idle' || input.trim().length < 4}
+                style={{
+                  marginTop: 28,
+                  fontFamily: 'var(--mono)', fontSize: '13px', letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  background: phase !== 'idle' || input.trim().length < 4 ? 'var(--ink-20)' : 'var(--ink)',
+                  color: 'var(--bone)', border: 0,
+                  padding: '12px 28px', cursor: phase !== 'idle' || input.trim().length < 4 ? 'default' : 'pointer',
+                  transition: 'background var(--dur-fast) var(--ease)',
+                }}
+              >
+                Break it down
+              </button>
+            )}
           </div>
         )}
 
