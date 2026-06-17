@@ -147,12 +147,8 @@ export default function App() {
         throw new Error(body.error ?? 'Something went wrong. Please try again.')
       }
       const data = await res.json()
-      if (user) {
-        await supabase.from('saved_sentences').insert({ user_id: user.id, sentence_id: data.id }).select()
-        setSavedIds(ids => new Set([...ids, data.id]))
-        await loadSaved()
-      }
-      router.push('/sentences/' + data.id + '?new=1')
+      const unsaved = data._newly_created ? '&unsaved=1' : ''
+      router.push('/sentences/' + data.id + '?new=1' + unsaved)
     } catch (e: any) {
       setError(e.message ?? 'Something went wrong. Please try again.')
     } finally {

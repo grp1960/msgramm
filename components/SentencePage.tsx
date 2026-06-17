@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Sentence } from '@/lib/types'
 import { supabase } from '@/lib/supabase'
 import type { User } from '@supabase/supabase-js'
@@ -10,12 +11,15 @@ import ChatPanel from './ChatPanel'
 import AuthModal from './AuthModal'
 import FeedbackModal, { FeedbackScope } from './FeedbackModal'
 
-export default function SentencePage({ sentence, isNew }: { sentence: Sentence; isNew?: boolean }) {
+export default function SentencePage({ sentence, isNew, isUnsaved }: { sentence: Sentence; isNew?: boolean; isUnsaved?: boolean }) {
+  const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
   const [saved, setSaved] = useState(false)
+  const [unsaved, setUnsaved] = useState(isUnsaved ?? false)
   const [userTags, setUserTags] = useState<string[]>([])
   const [showAuth, setShowAuth] = useState(false)
   const [feedbackScope, setFeedbackScope] = useState<FeedbackScope | null>(null)
+  const unsavedRef = useRef(unsaved)
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user))
@@ -39,10 +43,33 @@ export default function SentencePage({ sentence, isNew }: { sentence: Sentence; 
       })
   }, [user, sentence.id])
 
+  useEffect(() => {
+    unsavedRef.current = unsaved
+  }, [unsaved])
+
+  useEffect(() => {
+    if (!isUnsaved) return
+    const handler = (e: BeforeUnloadEvent) => {
+      if (!unsavedRef.current) return
+      e.preventDefault()
+      e.returnValue = ''
+    }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [isUnsaved])
+
   async function handleSave() {
-    if (!user || saved) return
+    if (!user) { setShowAuth(true); return }
+    if (saved) return
     await supabase.from('saved_sentences').insert({ user_id: user.id, sentence_id: sentence.id, user_tags: [] })
     setSaved(true)
+    setUnsaved(false)
+  }
+
+  async function handleDiscard() {
+    setUnsaved(false)
+    await fetch(`/api/sentences/${sentence.id}`, { method: 'DELETE' })
+    router.push('/')
   }
 
   async function updateUserTags(tags: string[]) {
@@ -104,12 +131,39 @@ export default function SentencePage({ sentence, isNew }: { sentence: Sentence; 
           </Link>
         </div>
 
-        {/* ── Save button for freshly submitted sentences ── */}
+        {/* ── Save / Discard for newly created sentences ── */}
         {isNew && (
           <div style={{ marginBottom: 32 }}>
-            {!saved ? (
+            {saved ? (
+              <span style={{ fontFamily: 'var(--mono)', fontSize: '12px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-40)' }}>
+                ✓ Saved
+              </span>
+            ) : unsaved ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <button
+                  onClick={handleSave}
+                  style={{
+                    fontFamily: 'var(--mono)', fontSize: '12px', letterSpacing: '0.08em',
+                    textTransform: 'uppercase', background: 'var(--ink)', color: 'var(--bone)',
+                    border: 0, padding: '10px 20px', cursor: 'pointer',
+                  }}
+                >
+                  {user ? 'Save this breakdown' : 'Sign in to save'}
+                </button>
+                <button
+                  onClick={handleDiscard}
+                  style={{
+                    fontFamily: 'var(--mono)', fontSize: '12px', letterSpacing: '0.08em',
+                    textTransform: 'uppercase', background: 'transparent', color: 'var(--ink-40)',
+                    border: 0, padding: '10px 0', cursor: 'pointer',
+                  }}
+                >
+                  Discard
+                </button>
+              </div>
+            ) : (
               <button
-                onClick={user ? handleSave : () => setShowAuth(true)}
+                onClick={handleSave}
                 style={{
                   fontFamily: 'var(--mono)', fontSize: '12px', letterSpacing: '0.08em',
                   textTransform: 'uppercase', background: 'var(--ink)', color: 'var(--bone)',
@@ -118,10 +172,6 @@ export default function SentencePage({ sentence, isNew }: { sentence: Sentence; 
               >
                 {user ? 'Save this breakdown' : 'Sign in to save'}
               </button>
-            ) : (
-              <span style={{ fontFamily: 'var(--mono)', fontSize: '12px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-40)' }}>
-                ✓ Saved
-              </span>
             )}
           </div>
         )}

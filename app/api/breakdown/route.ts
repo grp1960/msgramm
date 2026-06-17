@@ -168,5 +168,5 @@ export const POST = withGuards(
     return NextResponse.json({ error: 'Failed to save' }, { status: 500 })
   }
 
-  return NextResponse.json(data)
+  return NextResponse.json({ ...data, _newly_created: !force })
 })

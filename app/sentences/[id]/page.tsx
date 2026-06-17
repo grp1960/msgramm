@@ -17,12 +17,12 @@ export default async function Page({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ new?: string }>
+  searchParams: Promise<{ new?: string; unsaved?: string }>
 }) {
   const { id } = await params
-  const { new: isNew } = await searchParams
+  const { new: isNew, unsaved } = await searchParams
   const sentence = await getSentence(id)
   if (!sentence) notFound()
 
-  return <SentencePage sentence={sentence} isNew={isNew === '1'} />
+  return <SentencePage sentence={sentence} isNew={isNew === '1'} isUnsaved={unsaved === '1'} />
 }
