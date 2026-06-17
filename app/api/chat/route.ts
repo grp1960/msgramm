@@ -58,9 +58,10 @@ export const POST = withGuards(
     reply = response.choices[0].message
     usage = response.usage
 
-    // Record actual token usage against quota
-    if (userId && quotaPeriodStart) {
-      await recordUsage(userId, quotaPeriodStart, usage?.total_tokens ?? 0)
+    // Record actual token usage (always, including admins)
+    if (userId) {
+      const periodStart = quotaPeriodStart || new Date().toISOString().slice(0, 10)
+      await recordUsage(userId, periodStart, usage?.total_tokens ?? 0)
     }
   } catch {
     return NextResponse.json({ error: 'OpenAI error' }, { status: 500 })
