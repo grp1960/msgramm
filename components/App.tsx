@@ -73,7 +73,10 @@ type ListFilter = 'all' | 'builtin' | 'personal'
 
 export default function App() {
   const router = useRouter()
-  const [view, setView] = useState<View>('list')
+  const [view, setView] = useState<View>(() =>
+    typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('add') === '1'
+      ? 'enter' : 'list'
+  )
   const [sentences, setSentences] = useState<Sentence[]>([])
   const [listFilter, setListFilter] = useState<ListFilter>('builtin')
   const [conceptFilter, setConceptFilter] = useState<string | null>(null)
