@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
+import { recordUsage } from '@/lib/quota'
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
@@ -38,7 +39,7 @@ INVALID (return status: invalid) only when:
 Keep "why" explanations short and plain — no linguistics jargon. Say "direct object, so accusative" not "accusative case required by transitive verb governing NP".`
 
 export async function POST(req: NextRequest) {
-  const { sentence } = await req.json()
+  const { sentence, userId } = await req.json()
   if (!sentence || sentence.trim().length < 4) {
     return NextResponse.json({ status: 'invalid', message: 'Sentence too short.' })
   }
@@ -55,6 +56,10 @@ export async function POST(req: NextRequest) {
       temperature: 0,
     })
     const parsed = JSON.parse(res.choices[0].message.content ?? '{}')
+    if (userId) {
+      const periodStart = new Date().toISOString().slice(0, 10)
+      await recordUsage(userId, periodStart, res.usage?.total_tokens ?? 0)
+    }
     return NextResponse.json(parsed)
   } catch {
     // Fail open — if checker errors, let the breakdown proceed

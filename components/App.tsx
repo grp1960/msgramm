@@ -145,7 +145,7 @@ export default function App() {
       const checkRes = await fetch('/api/check', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sentence: text }),
+        body: JSON.stringify({ sentence: text, userId: user?.id ?? null }),
       })
       const check = await checkRes.json()
 
