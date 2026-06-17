@@ -72,6 +72,17 @@ export default function SentencePage({ sentence, isNew, isUnsaved }: { sentence:
     router.push('/')
   }
 
+  async function handleRemoveFromSaved() {
+    if (!user) return
+    await supabase
+      .from('saved_sentences')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('sentence_id', sentence.id)
+    setSaved(false)
+    setUserTags([])
+  }
+
   async function updateUserTags(tags: string[]) {
     await supabase
       .from('saved_sentences')
@@ -176,10 +187,26 @@ export default function SentencePage({ sentence, isNew, isUnsaved }: { sentence:
           </div>
         )}
 
+        {/* ── Remove from saved (non-new saved sentences) ── */}
+        {!isNew && saved && user && (
+          <div style={{ marginBottom: 32 }}>
+            <button
+              onClick={handleRemoveFromSaved}
+              style={{
+                fontFamily: 'var(--mono)', fontSize: '12px', letterSpacing: '0.08em',
+                textTransform: 'uppercase', background: 'transparent', color: 'var(--ink-40)',
+                border: 0, padding: 0, cursor: 'pointer',
+              }}
+            >
+              Remove from saved
+            </button>
+          </div>
+        )}
+
         <Breakdown
           sentence={sentence}
           saved={saved}
-          onSave={isNew && user ? handleSave : undefined}
+          onSave={!isNew && !saved && user ? handleSave : isNew && user ? handleSave : undefined}
           userTags={saved ? userTags : undefined}
           onUserTagsChange={saved ? updateUserTags : undefined}
           userId={user?.id ?? null}
