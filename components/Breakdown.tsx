@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useLayoutEffect } from 'react'
 import { Sentence, Topic } from '@/lib/types'
 import { supabase } from '@/lib/supabase'
 import WordEntry from './WordEntry'
+import QuizMode from './QuizMode'
 
 type Props = {
   sentence: Sentence
@@ -329,78 +330,88 @@ export default function Breakdown({
         </div>
       )}
 
-      {/* ── Word breakdown toggle ── */}
-      <button
-        onClick={() => setShowLexicon(v => !v)}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          width: '100%',
-          background: 'transparent',
-          border: 0,
-          borderTop: 'var(--border-rule)',
-          borderBottom: showLexicon ? 'none' : 'var(--border-rule)',
-          padding: '12px 0',
-          cursor: 'pointer',
-          textAlign: 'left',
-        }}
-      >
-        <span style={{ fontSize: '16px', color: 'var(--ink-60)', lineHeight: 1, marginRight: 10 }}>
-          {showLexicon ? '▾' : '▸'}
-        </span>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: '14px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ink-60)' }}>
-          Word breakdown
-        </span>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: '13px', color: 'var(--ink-30)', marginLeft: 10 }}>
-          {words.length} words
-        </span>
-      </button>
+      {/* ── Quiz mode ── */}
+      {mode === 'quiz' && (
+        <div style={{ borderTop: 'var(--border-rule)', paddingTop: 24 }}>
+          <QuizMode sentence={sentence} />
+        </div>
+      )}
 
-      {/* ── Filters + Lexicon (visible when expanded) ── */}
-      {showLexicon && (
+      {/* ── Word breakdown toggle (study mode only) ── */}
+      {mode === 'study' && (
         <>
-          <div className="mg-filters" style={{ borderTop: 'none' }}>
-            <span className="mg-filters-label">Filter</span>
-            <button
-              className="mg-filter"
-              aria-pressed={filter === 'all' ? 'true' : 'false'}
-              onClick={() => setFilter('all')}
-            >
-              All
-            </button>
-            {types.map(type => {
-              const count = words.filter(w => w.type === type).length
-              return (
-                <button
-                  key={type}
-                  className="mg-filter"
-                  aria-pressed={filter === type ? 'true' : 'false'}
-                  onClick={() => setFilter(filter === type ? 'all' : type)}
-                >
-                  {type}<span className="count">{count}</span>
-                </button>
-              )
-            })}
-          </div>
+          <button
+            onClick={() => setShowLexicon(v => !v)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              width: '100%',
+              background: 'transparent',
+              border: 0,
+              borderTop: 'var(--border-rule)',
+              borderBottom: showLexicon ? 'none' : 'var(--border-rule)',
+              padding: '12px 0',
+              cursor: 'pointer',
+              textAlign: 'left',
+            }}
+          >
+            <span style={{ fontSize: '16px', color: 'var(--ink-60)', lineHeight: 1, marginRight: 10 }}>
+              {showLexicon ? '▾' : '▸'}
+            </span>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: '14px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ink-60)' }}>
+              Word breakdown
+            </span>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: '13px', color: 'var(--ink-30)', marginLeft: 10 }}>
+              {words.length} words
+            </span>
+          </button>
 
-          <div className="mg-entries">
-            {filtered.map(w => (
-              <div key={w.wid} id={`entry-${w.wid}`}>
-                <WordEntry
-                  entry={w}
-                  mode={mode}
-                  isHovered={hoveredId === w.wid}
-                  isActive={activeId === w.wid}
-                  revealed={revealed}
-                  topicSlug={topicByType[w.type]}
-                  onMouseEnter={() => setHoveredId(w.wid)}
-                  onMouseLeave={() => setHoveredId(null)}
-                  onReveal={toggleReveal}
-                  onRevealAll={() => revealAll(w.wid)}
-                />
+          {showLexicon && (
+            <>
+              <div className="mg-filters" style={{ borderTop: 'none' }}>
+                <span className="mg-filters-label">Filter</span>
+                <button
+                  className="mg-filter"
+                  aria-pressed={filter === 'all' ? 'true' : 'false'}
+                  onClick={() => setFilter('all')}
+                >
+                  All
+                </button>
+                {types.map(type => {
+                  const count = words.filter(w => w.type === type).length
+                  return (
+                    <button
+                      key={type}
+                      className="mg-filter"
+                      aria-pressed={filter === type ? 'true' : 'false'}
+                      onClick={() => setFilter(filter === type ? 'all' : type)}
+                    >
+                      {type}<span className="count">{count}</span>
+                    </button>
+                  )
+                })}
               </div>
-            ))}
-          </div>
+
+              <div className="mg-entries">
+                {filtered.map(w => (
+                  <div key={w.wid} id={`entry-${w.wid}`}>
+                    <WordEntry
+                      entry={w}
+                      mode={mode}
+                      isHovered={hoveredId === w.wid}
+                      isActive={activeId === w.wid}
+                      revealed={revealed}
+                      topicSlug={topicByType[w.type]}
+                      onMouseEnter={() => setHoveredId(w.wid)}
+                      onMouseLeave={() => setHoveredId(null)}
+                      onReveal={toggleReveal}
+                      onRevealAll={() => revealAll(w.wid)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </>
       )}
 

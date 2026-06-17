@@ -19,6 +19,7 @@ export default async function CardPage({ params }: { params: Promise<{ id: strin
 
   const { words, translation } = sentence.breakdown
   const capped = words.slice(0, 12)
+  const skipped = words.length - capped.length
 
   return (
     <div style={{
@@ -143,6 +144,19 @@ export default async function CardPage({ params }: { params: Promise<{ id: strin
           )
         })}
       </div>
+
+      {/* Skipped words note */}
+      {skipped > 0 && (
+        <div style={{
+          marginTop: 12,
+          fontFamily: 'var(--mono)',
+          fontSize: 11,
+          letterSpacing: '0.06em',
+          color: '#AAAAAA',
+        }}>
+          + {skipped} more word{skipped !== 1 ? 's' : ''} — full breakdown at msgramm.com
+        </div>
+      )}
 
       {/* Footer */}
       <div style={{

@@ -49,6 +49,14 @@ export const POST = withGuards(
 
   const text = sentence.trim()
 
+  const wordCount = text.split(/\s+/).length
+  if (wordCount > 40) {
+    return NextResponse.json(
+      { error: 'INVALID_INPUT', message: 'This sentence is too long to analyse. Please enter a sentence of 40 words or fewer.' },
+      { status: 422 },
+    )
+  }
+
   // 1. Cache check — if already in DB, skip LLM guard and return immediately
   if (!force) {
     const { data: cached } = await supabase
@@ -99,7 +107,7 @@ export const POST = withGuards(
         { role: 'user', content: `Language: ${language ?? 'German'}\nSentence: ${text}` },
       ],
       temperature: 0.2,
-      max_tokens: 2000,
+      max_tokens: 4000,
     })
     breakdown = JSON.parse(response.choices[0].message.content ?? '{}')
 
