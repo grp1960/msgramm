@@ -34,7 +34,7 @@ export function quotaGuard(options: QuotaGuardOptions): Guard {
 
     if (!status.allowed) {
       return NextResponse.json(
-        { error: 'QUOTA_EXCEEDED', message: status.reason },
+        { error: 'QUOTA_EXCEEDED', message: status.reason, periodEnd: status.periodEnd },
         { status: 429 },
       )
     }

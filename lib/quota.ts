@@ -47,7 +47,7 @@ export function currentPeriodStart(
 
 export type QuotaStatus =
   | { allowed: true; tokensUsed: number; limit: number; periodStart: string }
-  | { allowed: false; tokensUsed: number; limit: number; periodStart: string; reason: string }
+  | { allowed: false; tokensUsed: number; limit: number; periodStart: string; periodEnd: string; reason: string }
 
 // ─── Check quota ───────────────────────────────────────────────────────────
 
@@ -115,13 +115,18 @@ export async function checkQuota(
 
   const tokensUsed = usage?.tokens_used ?? 0
 
+  const periodEndMs =
+    new Date(periodStart).getTime() + intervalDays * 86_400_000
+  const periodEnd = new Date(periodEndMs).toISOString().slice(0, 10)
+
   if (tokensUsed + estimatedTokens > limit) {
     return {
       allowed: false,
       tokensUsed,
       limit,
       periodStart,
-      reason: `Monthly token quota reached (${tokensUsed.toLocaleString()} / ${limit.toLocaleString()} used).`,
+      periodEnd,
+      reason: `Monthly token quota reached (${tokensUsed.toLocaleString()} / ${limit.toLocaleString()} used). Your quota resets on ${periodEnd}.`,
     }
   }
 

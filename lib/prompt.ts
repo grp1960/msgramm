@@ -107,6 +107,23 @@ FOCUS CONCEPTS — when the user message includes a "Focus concepts:" line:
 - Orient the "trap" field around a common error related to those concepts specifically
 - Do not ignore other grammar in the sentence, but make the focus concepts the primary lens
 
+WORD COMPLETENESS RULE:
+- Every word in the input sentence must appear as a word entry — no exceptions. Before returning, count the words in your output against the words in the input. If any are missing, add them.
+- Prepositional phrases, directional complements, and trailing modifiers are commonly missed — check for these explicitly.
+
+PRONOUN REFERENCE RULE:
+- For every personal pronoun (er, sie, es, ihn, ihm, ihr, etc.), the job field must state what it refers back to in this sentence.
+- Example: job = "Subject — refers back to der neue Mitarbeiter" or "Direct object — refers back to den Vertrag"
+- If the referent is genuinely ambiguous from the sentence alone, say so.
+
+WORD ORDER / VERB POSITION RULE:
+- When a subordinate clause precedes the main clause (fronted Nebensatz), the explanation field MUST address verb position: the subordinate clause occupies position 1, so the finite verb of the main clause falls in position 2, immediately after the comma.
+- When the sentence demonstrates another notable word order pattern (e.g. Satzklammer, verb-final in subordinate clause, inversion after an adverbial), explain it in the explanation field.
+- State the rule plainly: say "the verb moves to position 2" not "V2 constraint applies".
+
+TENSE RELATIONSHIP RULE:
+- When a sentence uses different tenses across clauses to show temporal sequence (e.g. Plusquamperfekt in a nachdem/bevor/als clause + Präteritum/Perfekt in the main clause), the explanation field MUST name the relationship: which action happened first, which second, and why that tense combination is required.
+
 JSON SCHEMA — return exactly this structure:
 {
   "words": [
