@@ -47,7 +47,8 @@ export function currentPeriodStart(
 
 export type QuotaStatus =
   | { allowed: true; tokensUsed: number; limit: number; periodStart: string }
-  | { allowed: false; tokensUsed: number; limit: number; periodStart: string; periodEnd: string; reason: string }
+  | { allowed: false; expired: true; expiresAt: string; tokensUsed: number; limit: number; periodStart: string; periodEnd: string; reason: string }
+  | { allowed: false; expired?: false; tokensUsed: number; limit: number; periodStart: string; periodEnd: string; reason: string }
 
 // ─── Check quota ───────────────────────────────────────────────────────────
 
@@ -72,6 +73,7 @@ export async function checkQuota(
       token_limit_override,
       subscription_start,
       subscription_interval_days,
+      expires_at,
       license_types ( monthly_token_limit )
     `)
     .eq('user_id', userId)
@@ -93,6 +95,23 @@ export async function checkQuota(
   // 2. Admin role → always pass
   if (profile.role === 'admin') {
     return { allowed: true, tokensUsed: 0, limit: 999_999_999, periodStart: '' }
+  }
+
+  // 3a. Pilot expiry check
+  if (profile.expires_at) {
+    const today = new Date().toISOString().slice(0, 10)
+    if (today >= profile.expires_at) {
+      return {
+        allowed: false,
+        expired: true,
+        expiresAt: profile.expires_at,
+        tokensUsed: 0,
+        limit: 0,
+        periodStart: '',
+        periodEnd: '',
+        reason: 'Your pilot access has ended. Thank you for being part of the Ms. Gramm pilot!',
+      }
+    }
   }
 
   // 3. Resolve limit

@@ -8,6 +8,7 @@ import type { User } from '@supabase/supabase-js'
 import Link from 'next/link'
 import AuthModal from './AuthModal'
 import FeedbackModal from './FeedbackModal'
+import InviteGate from './InviteGate'
 
 const DIFFICULTY_ORDER: Difficulty[] = ['Beginner', 'Intermediate', 'Advanced', 'Expert']
 
@@ -88,6 +89,7 @@ export default function App() {
   const [correctedSentence, setCorrectedSentence] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [user, setUser] = useState<User | null>(null)
+  const [hasLicense, setHasLicense] = useState<boolean | null>(null)
   const [showAuth, setShowAuth] = useState(false)
   const [savedList, setSavedList] = useState<Sentence[]>([])
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
@@ -105,8 +107,18 @@ export default function App() {
     return () => subscription.unsubscribe()
   }, [])
 
+  async function checkLicense(userId: string) {
+    const { data } = await supabase
+      .from('profiles')
+      .select('license_type, role')
+      .eq('user_id', userId)
+      .single()
+    setHasLicense(!!(data?.license_type) || data?.role === 'admin')
+  }
+
   useEffect(() => {
-    if (user) loadSaved()
+    if (user) { loadSaved(); checkLicense(user.id) }
+    else setHasLicense(null)
   }, [user])
 
   async function loadSentences() {
@@ -181,6 +193,7 @@ export default function App() {
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
         if (res.status === 422) throw new Error(body.message ?? "This doesn't look like a natural language sentence.")
+        if (res.status === 429 && body.error === 'PILOT_EXPIRED') throw new Error(body.message ?? 'Your pilot access has ended. Thank you for being part of the Ms. Gramm pilot!')
         if (res.status === 429 && body.error === 'QUOTA_EXCEEDED') throw new Error(body.message ?? 'Monthly token quota reached. Please try again next period.')
         throw new Error(body.error ?? 'Something went wrong. Please try again.')
       }
@@ -210,6 +223,11 @@ export default function App() {
     return acc
   }, {} as Partial<Record<Difficulty, Sentence[]>>)
 
+
+  // Show invite gate if user is signed in but has no license
+  if (user && hasLicense === false) {
+    return <InviteGate userId={user.id} onActivated={() => checkLicense(user.id)} />
+  }
 
   return (
     <>

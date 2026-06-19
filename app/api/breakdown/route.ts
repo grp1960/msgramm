@@ -75,8 +75,9 @@ export const POST = withGuards(
   if (!force) {
     const quota = await checkQuota(userId ?? '', 2500)
     if (!quota.allowed) {
+      const error = quota.expired ? 'PILOT_EXPIRED' : 'QUOTA_EXCEEDED'
       return NextResponse.json(
-        { error: 'QUOTA_EXCEEDED', message: quota.reason, periodEnd: quota.periodEnd },
+        { error, message: quota.reason, periodEnd: quota.periodEnd },
         { status: 429 },
       )
     }
