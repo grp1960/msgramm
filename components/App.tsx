@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 import type { User } from '@supabase/supabase-js'
 import Link from 'next/link'
 import AuthModal from './AuthModal'
+import SignUpModal from './SignUpModal'
 import FeedbackModal from './FeedbackModal'
 import InviteGate from './InviteGate'
 
@@ -91,6 +92,7 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null)
   const [hasLicense, setHasLicense] = useState<boolean | null>(null)
   const [showAuth, setShowAuth] = useState(false)
+  const [showSignUp, setShowSignUp] = useState(false)
   const [savedList, setSavedList] = useState<Sentence[]>([])
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
   const [allSavedIds, setAllSavedIds] = useState<Set<string>>(new Set())
@@ -101,8 +103,24 @@ export default function App() {
     loadSentences()
     loadAllSaved()
     supabase.auth.getUser().then(({ data }) => setUser(data.user))
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null)
+      // Save pending sign-up profile data after magic link confirm
+      if (event === 'SIGNED_IN' && session?.user) {
+        const pending = localStorage.getItem('mg_pending_profile')
+        if (pending) {
+          try {
+            const profile = JSON.parse(pending)
+            fetch('/api/profile/complete', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId: session.user.id, ...profile }),
+            }).finally(() => localStorage.removeItem('mg_pending_profile'))
+          } catch {
+            localStorage.removeItem('mg_pending_profile')
+          }
+        }
+      }
     })
     return () => subscription.unsubscribe()
   }, [])
@@ -232,6 +250,12 @@ export default function App() {
   return (
     <>
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+      {showSignUp && (
+        <SignUpModal
+          onClose={() => setShowSignUp(false)}
+          onSwitchToSignIn={() => { setShowSignUp(false); setShowAuth(true) }}
+        />
+      )}
       {showFeedback && (
         <FeedbackModal scope="general" userId={user?.id} userEmail={user?.email} onClose={() => setShowFeedback(false)} />
       )}
@@ -262,7 +286,10 @@ export default function App() {
             {user ? (
               <button onClick={() => supabase.auth.signOut()} style={{ ...monoLink, background: 'transparent', border: 0, cursor: 'pointer' }}>Sign out</button>
             ) : (
-              <button onClick={() => setShowAuth(true)} style={{ ...monoLink, background: 'transparent', border: 0, cursor: 'pointer' }}>Sign in</button>
+              <>
+                <button onClick={() => { setShowSignUp(false); setShowAuth(true) }} style={{ ...monoLink, background: 'transparent', border: 0, cursor: 'pointer' }}>Sign in</button>
+                <button onClick={() => { setShowAuth(false); setShowSignUp(true) }} style={{ ...monoLink, background: 'var(--ink)', color: 'white', border: 0, padding: '4px 12px', cursor: 'pointer' }}>Sign up</button>
+              </>
             )}
           </div>
         </header>
