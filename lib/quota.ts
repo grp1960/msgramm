@@ -85,6 +85,7 @@ export async function checkQuota(
       tokensUsed: 0,
       limit: 0,
       periodStart: '',
+      periodEnd: '',
       reason: 'No user profile found.',
     }
   }
