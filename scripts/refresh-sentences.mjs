@@ -42,7 +42,7 @@ async function regenerate(sentence) {
     response_format: { type: 'json_object' },
     messages: [
       { role: 'system', content: SYSTEM_PROMPT },
-      { role: 'user', content: `Language: ${sentence.language}\nSentence: ${sentence.text}` },
+      { role: 'user', content: `Language: ${sentence.language}\nSentence: ${sentence.text}${sentence.concepts?.length ? `\nFocus concepts: ${sentence.concepts.join(', ')}` : ''}` },
     ],
     temperature: 0.2,
   })
@@ -56,7 +56,7 @@ function sleep(ms) {
 async function run() {
   const { data: sentences, error } = await supabase
     .from('sentences')
-    .select('id, text, language')
+    .select('id, text, language, concepts')
     .eq('needs_refresh', true)
     .order('created_at', { ascending: true })
 
@@ -91,6 +91,11 @@ async function run() {
   }
 
   console.log(`\nDone. ${success} refreshed, ${failed} failed.`)
+  const msg = `${success} refreshed, ${failed} failed.`
+  try {
+    const { execSync } = await import('child_process')
+    execSync(`powershell -ExecutionPolicy Bypass -File "scripts/notify.ps1" -Title "Ms. Gramm: refresh done" -Message "${msg}"`, { stdio: 'ignore' })
+  } catch {}
 }
 
 run()

@@ -23,9 +23,10 @@ You are validating a German grammar breakdown JSON for the Ms. Gramm learning ap
 - Minor product-fit refinements
 
 **Approved word types** (only these strings are valid in the `type` field):
-Pronoun · Verb · Helper verb · Modal verb · Noun · Article · Article contraction · Preposition · Reason connector · Condition opener · Negation · Pointing word · Time word · Conjunction · Adverb · Adjective
+Pronoun · Verb · Helper verb · Modal verb · Noun · Article · Article contraction · Preposition · Reason connector · Condition opener · Negation · Pointing word · Time word · Conjunction · Adverb · Adjective · Punctuation
 
 **Schema rules:**
 - `case`, `gender`, `number` — required on Noun, Article, Article contraction, Pronoun only. Do NOT add these to Adjective.
 - `tense` — required on Verb and Helper verb only
 - `person` — required on Verb, Helper verb, and Modal verb only
+- `Punctuation` entries do NOT take case/gender/number/tense/person. Include commas only at grammatically required clause boundaries (not sentence-ending periods).

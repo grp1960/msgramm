@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 import { createClient } from '@supabase/supabase-js'
-import { withGuards, rateLimitGuard, heuristicGuard, llmGuard } from '@/lib/guards'
+import { withGuards, rateLimitGuard } from '@/lib/guards'
+import { heuristicGuard, llmGuard } from '@/lib/guards'
 import { checkQuota, recordUsage } from '@/lib/quota'
 import { requireAuth } from '@/lib/auth'
 
@@ -18,13 +19,11 @@ const ALLOWED_ROLES = new Set(['user', 'assistant'])
 
 export const POST = withGuards(
   rateLimitGuard({ limit: 100, windowSecs: 86400, keyPrefix: 'chat' }),
-  heuristicGuard({ field: 'lastMessage' }),
-  llmGuard({ field: 'lastMessage' }),
 )(async (req: NextRequest): Promise<NextResponse> => {
   const { user, response: authError } = await requireAuth(req)
   if (authError) return authError
 
-  const { messages, sentence, lastMessage } = await req.json()
+  const { messages, sentence } = await req.json()
 
   // Validate messages array
   if (!Array.isArray(messages) || messages.length === 0) {
@@ -39,6 +38,21 @@ export const POST = withGuards(
       return NextResponse.json({ error: 'Message too long.' }, { status: 400 })
     }
   }
+
+  // Run content guards against the actual last user message
+  const lastUserMsg = [...messages].reverse().find((m: any) => m.role === 'user')?.content ?? ''
+  const guardReq = new Request(req.url, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ lastMessage: lastUserMsg }),
+  }) as NextRequest
+
+  const hGuard = heuristicGuard({ field: 'lastMessage' })
+  const lGuard = llmGuard({ field: 'lastMessage' })
+  const hRejection = await hGuard(guardReq, {})
+  if (hRejection) return hRejection as NextResponse
+  const lRejection = await lGuard(guardReq, {})
+  if (lRejection) return lRejection as NextResponse
 
   const userId = user!.id
 

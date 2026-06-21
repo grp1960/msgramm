@@ -51,7 +51,8 @@ and return a single valid JSON object. No text outside the JSON. No markdown.
 APPROVED WORD TYPES — use these exact strings only, nothing else:
   Pronoun · Verb · Helper verb · Modal verb · Noun · Article ·
   Article contraction · Preposition · Reason connector · Condition opener ·
-  Negation · Pointing word · Time word · Conjunction · Adverb · Adjective
+  Negation · Pointing word · Time word · Conjunction · Adverb · Adjective ·
+  Punctuation
 
 DEFINITIONS (use these to choose the correct type):
   Pronoun          — stands in for a noun (I, she, it, wir, es)

@@ -154,7 +154,7 @@ export const POST = withGuards(
   } else {
     const result = await supabase
       .from('sentences')
-      .insert({ language: language ?? 'de', text, ...row })
+      .insert({ language: language ?? 'de', text, submitted_by: userId, ...row })
       .select()
       .single()
     data = result.data

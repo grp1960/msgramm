@@ -1,0 +1,388 @@
+/* ═══════════════════════════════════════════════════════════════
+   The Incremental Pathway — Design System Tokens
+   v1.0 · 2026 editorial rebuild
+   ═══════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  /* ─── COLOUR · brand primary ─── */
+  --indigo: #3B3F7F;          /* keep — primary brand */
+  --deep:   #2D3266;          /* keep — secondary brand, used for depth sections */
+  --indigo-90: #4A4E8B;       /* hover state on solid indigo */
+  --indigo-on-bone: #2D3266;  /* type colour for indigo on bone bg, AAA */
+
+  /* ─── COLOUR · accent (used sparingly) ─── */
+  --gold:        #B8893A;     /* demoted from #D4A843, deeper for editorial feel */
+  --gold-on-ink: #C49A4A;     /* the original-ish gold, only for use on ink/indigo */
+  --nps-mark:    var(--gold); /* the one job: NPS guarantee */
+
+  /* ─── COLOUR · cool neutrals (the editorial surface) ─── */
+  /* Very light cool grey. Faint blue cast. Reads as serious publication, */
+  /* furthest from Anthropic's warm cream. */
+  --bone:    #F4F5F8;         /* primary surface — very light cool grey */
+  --bone-d:  #E8EAF0;         /* deeper cool grey for layered / pull sections */
+  --paper:   #F8F9FB;         /* lightest cool grey for inset cards */
+  --mist:    #FAFBFD;         /* near-white cool grey */
+  --white:   #FFFFFF;
+
+  /* ─── COLOUR · ink (typography) ─── */
+  --ink:     #1E1E2E;         /* body — never pure black */
+  --ink-90:  #2A2A3A;
+  --ink-70:  #4A4A5A;         /* secondary text */
+  --ink-60:  #6B6B78;         /* captions, sources, metadata */
+  --ink-40:  #9A9AA4;         /* dividers, disabled */
+  --ink-20:  #C9CDD5;         /* hairlines on bone — cool grey */
+  --ink-10:  #DDE0E6;         /* hairlines lighter — cool grey */
+
+  /* ─── COLOUR · semantic (kept minimal) ─── */
+  --positive: #2D6B4E;        /* used only in evidence-ledger green */
+  --warning:  #B8893A;        /* matches --gold */
+  --error:    #8B3A3A;        /* book/contact form errors only */
+
+  /* ─── COLOUR · imagery duotone (for B&W photography) ─── */
+  --duo-shadow:    #2D3266;
+  --duo-highlight: #ECEEF2;
+
+  /* ─── TYPE · families ─── */
+  /* SINGLE-TYPEFACE SYSTEM. Inter Tight does all the work. */
+  /* Weight + size + tracking do the contrast a serif would normally provide. */
+  --sans:    'Inter Tight', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --display: 'Inter Tight', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --serif:   'Inter Tight', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; /* legacy alias — same as display */
+  --mono:    'JetBrains Mono', 'Söhne Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* ─── TYPE · scale (desktop) ─── */
+  --t-display:   clamp(56px, 7vw, 96px);   /* hero h1 */
+  --t-h1:        clamp(40px, 4.5vw, 64px); /* section h1 */
+  --t-h2:        clamp(32px, 3.6vw, 44px); /* section h2 */
+  --t-h3:        clamp(22px, 2.2vw, 28px);
+  --t-pull:      clamp(24px, 2.4vw, 32px); /* pull-quote / lead paragraph */
+  --t-body:      18px;
+  --t-body-sm:   16px;
+  --t-caption:   14px;
+  --t-mono-sm:   13px;
+  --t-mono-xs:   11px;
+  --t-label:     12px;                     /* eyebrow labels in mono */
+
+  /* ─── TYPE · weights ─── */
+  /* Single-typeface system: weight is doing the contrast work. */
+  --w-display: 300;          /* light Inter Tight at scale — modern, confident */
+  --w-display-md: 400;
+  --w-display-bold: 500;     /* never above 500 on display */
+  --w-body: 400;
+  --w-body-md: 500;
+  --w-body-bold: 600;
+  --w-mono: 500;             /* labels punch a bit harder */
+
+  /* ─── TYPE · leading ─── */
+  --lh-display: 0.96;
+  --lh-h2:      1.08;
+  --lh-pull:    1.32;
+  --lh-body:    1.55;
+  --lh-tight:   1.2;
+
+  /* ─── TYPE · tracking ─── */
+  /* Tighter on display because Inter Tight at light weight wants compression. */
+  --tr-display: -0.035em;    /* -3.5% on display */
+  --tr-h2:      -0.025em;
+  --tr-body:    0;
+  --tr-label:   0.12em;      /* +12% on mono labels */
+
+  /* ─── SPACING · 4px base ─── */
+  --s-1:  4px;
+  --s-2:  8px;
+  --s-3:  12px;
+  --s-4:  16px;
+  --s-5:  24px;
+  --s-6:  32px;
+  --s-7:  48px;
+  --s-8:  64px;
+  --s-9:  96px;
+  --s-10: 120px;
+  --s-11: 160px;
+
+  --section-y: clamp(80px, 10vw, 160px);   /* default section padding */
+  --measure:   620px;                      /* body column width */
+  --container: 1200px;                     /* max content width */
+
+  /* ─── RADII ─── */
+  --r-0:    0;
+  --r-input: 4px;
+  --r-pill:  999px;
+
+  /* ─── BORDERS ─── */
+  --border-hair: 1px solid var(--ink-20);
+  --border-rule: 1px solid var(--ink-10);
+
+  /* ─── SHADOW · the one allowed shadow ─── */
+  --shadow-menu: 0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(30,30,46,0.06);
+
+  /* ─── MOTION ─── */
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --dur:  240ms;
+  --dur-fast: 120ms;
+
+  /* ─── Z ─── */
+  --z-nav:    50;
+  --z-modal: 100;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SEMANTIC TYPOGRAPHY
+   Apply these classes (or use the selectors directly when reset)
+   ═══════════════════════════════════════════════════════════════ */
+
+html { font-size: 16px; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+body {
+  font-family: var(--sans);
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  color: var(--ink);
+  background: var(--bone);
+  font-feature-settings: "ss01", "cv11";
+}
+
+/* Display — hero only. Use h1 sparingly. */
+.t-display, h1.display {
+  font-family: var(--display);
+  font-size: var(--t-display);
+  font-weight: var(--w-display);
+  line-height: var(--lh-display);
+  letter-spacing: var(--tr-display);
+  color: var(--ink);
+  font-style: normal;
+}
+
+/* Section heading */
+.t-h1, h1 {
+  font-family: var(--display);
+  font-size: var(--t-h1);
+  font-weight: var(--w-display);
+  line-height: var(--lh-h2);
+  letter-spacing: var(--tr-h2);
+  color: var(--ink);
+}
+
+.t-h2, h2 {
+  font-family: var(--display);
+  font-size: var(--t-h2);
+  font-weight: var(--w-display);
+  line-height: var(--lh-h2);
+  letter-spacing: var(--tr-h2);
+  color: var(--ink);
+}
+
+.t-h3, h3 {
+  font-family: var(--sans);
+  font-size: var(--t-h3);
+  font-weight: var(--w-body-bold);
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+
+/* Pull / lead — italic Inter Tight gives the editorial cadence the serif used to */
+.t-pull, .lead {
+  font-family: var(--display);
+  font-size: var(--t-pull);
+  font-weight: var(--w-display);
+  line-height: var(--lh-pull);
+  color: var(--ink-90);
+  letter-spacing: -0.02em;
+}
+
+.t-body, p {
+  font-family: var(--sans);
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  color: var(--ink-90);
+}
+
+.t-body-sm { font-size: var(--t-body-sm); line-height: 1.55; color: var(--ink-70); }
+
+.t-caption {
+  font-family: var(--sans);
+  font-size: var(--t-caption);
+  line-height: 1.45;
+  color: var(--ink-60);
+}
+
+/* Source line — mono, sits directly under a stat or quoted figure */
+.t-source, .source {
+  font-family: var(--mono);
+  font-size: var(--t-mono-sm);
+  font-weight: var(--w-body);
+  color: var(--ink-60);
+  letter-spacing: 0;
+}
+
+/* Eyebrow / section label — mono, tracked */
+.t-label, .eyebrow {
+  font-family: var(--mono);
+  font-size: var(--t-label);
+  font-weight: var(--w-mono);
+  letter-spacing: var(--tr-label);
+  color: var(--ink-60);
+  text-transform: uppercase;
+}
+
+/* Stat — large display number with mono denominator */
+.t-stat {
+  font-family: var(--display);
+  font-size: clamp(48px, 6vw, 88px);
+  font-weight: var(--w-display);
+  line-height: 1;
+  letter-spacing: -0.035em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Programme code — used for "STRATEGIC", "PERSONAL", "TEAM" inline */
+.t-code {
+  font-family: var(--mono);
+  font-size: 0.92em;
+  font-weight: var(--w-mono);
+  letter-spacing: 0.05em;
+  color: var(--ink);
+}
+
+/* Links — body */
+a { color: inherit; text-decoration: none; transition: color var(--dur-fast) var(--ease); }
+.t-body a, p a, .prose a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--ink-40);
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+.t-body a:hover, p a:hover, .prose a:hover { text-decoration-color: var(--ink); }
+
+/* The single arrow link pattern */
+.link-arrow {
+  font-family: var(--sans);
+  font-weight: var(--w-body-bold);
+  font-size: var(--t-body-sm);
+  color: var(--ink);
+  border-bottom: 1px solid var(--ink-40);
+  padding-bottom: 1px;
+  transition: border-color var(--dur-fast) var(--ease);
+}
+.link-arrow:hover { border-bottom-color: var(--ink); }
+.link-arrow::after { content: ' →'; }
+
+/* ═══════════════════════════════════════════════════════════════
+   COMPONENT ATOMS
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Buttons — only two */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: var(--w-body-bold);
+  letter-spacing: 0.01em;
+  padding: 14px 22px;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: filter var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+}
+.btn:hover { filter: brightness(0.96); }
+.btn:active { transform: scale(0.98); }
+
+.btn-primary {
+  background: var(--ink);
+  color: var(--bone);
+  border-radius: var(--r-0);
+}
+.btn-secondary {
+  background: transparent;
+  color: var(--ink);
+  border-bottom: 1px solid var(--ink);
+  padding: 4px 0;
+}
+.btn-secondary:hover { filter: none; color: var(--ink-70); border-color: var(--ink-70); }
+
+/* The single pill — NPS guarantee */
+.nps-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--gold);
+  color: var(--white);
+  font-family: var(--mono);
+  font-size: var(--t-mono-sm);
+  font-weight: var(--w-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  border-radius: var(--r-pill);
+}
+
+/* Section spacing */
+.section { padding: var(--section-y) 24px; }
+.container { max-width: var(--container); margin: 0 auto; }
+.measure { max-width: var(--measure); }
+
+/* Editorial spread layout — 60/40 */
+.spread {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: var(--s-9);
+  align-items: start;
+}
+@media (max-width: 800px) {
+  .spread { grid-template-columns: 1fr; gap: var(--s-7); }
+}
+
+/* Rule — replaces card borders */
+.rule { border-top: var(--border-rule); padding-top: var(--s-5); }
+.rule-b { border-bottom: var(--border-rule); padding-bottom: var(--s-5); }
+
+/* Photo + caption block */
+.photo { margin: 0; }
+.photo img { width: 100%; height: auto; display: block; border-radius: 0; filter: grayscale(0.6) contrast(1.05); }
+.photo figcaption { font-family: var(--mono); font-size: var(--t-mono-sm); color: var(--ink-60); margin-top: var(--s-3); letter-spacing: 0; }
+
+/* Inverted (depth) section — used once per page */
+.invert { background: var(--ink); color: var(--bone); }
+.invert h1, .invert h2, .invert h3, .invert .t-display, .invert .lead { color: var(--bone); }
+.invert .t-body, .invert p { color: rgba(244, 239, 231, 0.78); }
+.invert .source, .invert .t-source, .invert .eyebrow, .invert .t-label { color: rgba(236, 238, 242, 0.55); }
+.invert .btn-primary { background: var(--bone); color: var(--ink); }
+.invert .btn-secondary { color: var(--bone); border-color: var(--bone); }
+.invert .btn-secondary:hover { color: rgba(236, 238, 242, 0.7); border-color: rgba(236, 238, 242, 0.7); }
+
+/* Sticky nav — the one place blur is used */
+.tip-nav {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-nav);
+  background: rgba(236, 238, 242, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: var(--border-rule);
+}
+
+/* Anchor row */
+.anchor-row {
+  display: flex;
+  gap: var(--s-6);
+  padding: var(--s-3) 0;
+  border-bottom: var(--border-rule);
+  font-family: var(--mono);
+  font-size: var(--t-mono-sm);
+  color: var(--ink-60);
+  letter-spacing: 0.04em;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.anchor-row::-webkit-scrollbar { display: none; }
+.anchor-row a { white-space: nowrap; }
+.anchor-row a:hover { color: var(--ink); }
+
+/* Selection */
+::selection { background: var(--ink); color: var(--bone); }

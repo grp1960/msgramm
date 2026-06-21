@@ -15,21 +15,18 @@ export async function DELETE(
   if (authError) return authError
 
   const { id } = await params
+  const userId = user!.id
 
-  // Only admins can delete corpus sentences; regular users can only delete recently-created ones
-  const admin = await isAdmin(user!.id)
+  const admin = await isAdmin(userId)
   if (!admin) {
     const { data: sentence } = await supabase
       .from('sentences')
-      .select('created_at')
+      .select('submitted_by')
       .eq('id', id)
       .single()
 
     if (!sentence) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-
-    const ageMs = Date.now() - new Date(sentence.created_at).getTime()
-    const ONE_HOUR = 60 * 60 * 1000
-    if (ageMs > ONE_HOUR) {
+    if (sentence.submitted_by !== userId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
   }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
-import { recordUsage } from '@/lib/quota'
+import { checkQuota, recordUsage } from '@/lib/quota'
 import { requireAuth } from '@/lib/auth'
 import { withGuards, rateLimitGuard } from '@/lib/guards'
 
@@ -54,6 +54,14 @@ export const POST = withGuards(
     return NextResponse.json({ status: 'invalid', message: 'Sentence too long.' })
   }
 
+  const quota = await checkQuota(user!.id, 400)
+  if (!quota.allowed) {
+    return NextResponse.json(
+      { error: quota.expired ? 'PILOT_EXPIRED' : 'QUOTA_EXCEEDED', message: quota.reason },
+      { status: 429 },
+    )
+  }
+
   try {
     const res = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
@@ -66,8 +74,7 @@ export const POST = withGuards(
       temperature: 0,
     })
     const parsed = JSON.parse(res.choices[0].message.content ?? '{}')
-    const periodStart = new Date().toISOString().slice(0, 10)
-    await recordUsage(user!.id, periodStart, res.usage?.total_tokens ?? 0)
+    await recordUsage(user!.id, quota.periodStart, res.usage?.total_tokens ?? 0)
     return NextResponse.json(parsed)
   } catch {
     return NextResponse.json({ status: 'clean' })

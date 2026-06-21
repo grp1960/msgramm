@@ -1,0 +1,386 @@
+﻿[
+  {
+    "text": "Dieses Buch ist interessanter als jenes.",
+    "concepts": [
+      "demonstrative-pronouns"
+    ],
+    "breakdown": {
+      "words": [
+        {
+          "wid": 1,
+          "word": "Dieses",
+          "type": "Pointing word",
+          "translation": "this",
+          "form": "Nominative · Neuter · Singular",
+          "note": "Refers to a specific book already known in context.",
+          "job": "Subject — points to a specific book",
+          "case": "Nominative",
+          "gender": "Neuter",
+          "number": "Singular",
+          "rationale": {
+            "type": "A pointing word specifies which item is meant — here, it singles out a particular book.",
+            "case": "Nominative — it is the subject of the sentence.",
+            "gender": "Neuter because Buch is neuter.",
+            "number": "Singular because it refers to one book."
+          }
+        },
+        {
+          "wid": 2,
+          "word": "Buch",
+          "type": "Noun",
+          "translation": "book",
+          "form": "Nominative · Neuter · Singular",
+          "job": "Subject — the thing being described",
+          "case": "Nominative",
+          "gender": "Neuter",
+          "number": "Singular",
+          "rationale": {
+            "type": "A noun names a thing — here, the item being discussed.",
+            "case": "Nominative — it is the subject of the sentence.",
+            "gender": "Neuter because Buch is neuter.",
+            "number": "Singular because it refers to one book."
+          }
+        },
+        {
+          "wid": 3,
+          "word": "ist",
+          "type": "Verb",
+          "translation": "is",
+          "form": "3rd singular · Present",
+          "note": "Links the subject to its description.",
+          "job": "Main verb — connects the subject to its state",
+          "tense": "Present",
+          "person": "3rd singular",
+          "rationale": {
+            "type": "A verb expresses the main action or state — here, it links the subject to its description.",
+            "tense": "Present because it describes a current state.",
+            "person": "3rd singular because the subject is 'Dieses Buch', a single item."
+          }
+        },
+        {
+          "wid": 4,
+          "word": "interessanter",
+          "type": "Adjective",
+          "translation": "more interesting",
+          "form": "Comparative",
+          "note": "Describes the book in comparison to another.",
+          "job": "Predicate adjective — describes the subject",
+          "rationale": {
+            "type": "An adjective describes a noun — here, it compares the book to another."
+          }
+        },
+        {
+          "wid": 5,
+          "word": "als",
+          "type": "Conjunction",
+          "translation": "than",
+          "job": "Introduces the comparison",
+          "rationale": {
+            "type": "A conjunction connects clauses or words — here, it introduces the comparison."
+          }
+        },
+        {
+          "wid": 6,
+          "word": "jenes",
+          "type": "Pointing word",
+          "translation": "that",
+          "form": "Nominative · Neuter · Singular",
+          "note": "Refers to another specific book for comparison.",
+          "job": "Comparison target — points to another specific book",
+          "case": "Nominative",
+          "gender": "Neuter",
+          "number": "Singular",
+          "rationale": {
+            "type": "A pointing word specifies which item is meant — here, it singles out another book for comparison.",
+            "case": "Nominative — it is the target of the comparison.",
+            "gender": "Neuter because Buch is neuter.",
+            "number": "Singular because it refers to one book."
+          }
+        }
+      ],
+      "translation": "This book is more interesting than that one.",
+      "difficulty": "Intermediate",
+      "tags": [
+        "demonstrative-pronouns",
+        "comparative",
+        "everyday"
+      ],
+      "explanation": "The sentence uses demonstrative pronouns 'dieses' and 'jenes' to specify and compare two books. 'Dieses' refers to the subject book, while 'jenes' points to another book for comparison. The adjective 'interessanter' is in the comparative form, indicating a comparison between the two.",
+      "trap": "A common mistake is to confuse 'dieses' and 'jenes' with their gender and case forms. Ensure they match the noun they refer to in gender, number, and case."
+    }
+  },
+  {
+    "text": "Kannst du mir diesen Stift geben, nicht jenen?",
+    "concepts": [
+      "demonstrative-pronouns",
+      "case-accusative",
+      "modal-verbs"
+    ],
+    "breakdown": {
+      "words": [
+        {
+          "wid": 1,
+          "word": "Kannst",
+          "type": "Modal verb",
+          "translation": "can",
+          "form": "2nd singular",
+          "note": "Asks about ability or permission.",
+          "job": "Main verb of the question",
+          "person": "2nd singular",
+          "rationale": {
+            "type": "A modal verb modifies the main verb by adding a sense of ability or permission.",
+            "person": "2nd singular because the subject is du — the person being addressed."
+          }
+        },
+        {
+          "wid": 2,
+          "word": "du",
+          "type": "Pronoun",
+          "translation": "you",
+          "form": "Subject form · 2nd person singular",
+          "job": "Subject of kannst",
+          "case": "Nominative",
+          "gender": "Masculine",
+          "number": "Singular",
+          "rationale": {
+            "type": "A pronoun stands in for a person already known — here, the listener.",
+            "case": "Nominative — subject of the verb kannst.",
+            "gender": "Masculine because du is used for male or female in informal address.",
+            "number": "Singular because it refers to one person."
+          }
+        },
+        {
+          "wid": 3,
+          "word": "mir",
+          "type": "Pronoun",
+          "translation": "me",
+          "form": "Dative case",
+          "job": "Indirect object of geben",
+          "case": "Dative",
+          "gender": "Masculine",
+          "number": "Singular",
+          "rationale": {
+            "type": "A pronoun stands in for a person already known — here, the speaker.",
+            "case": "Dative — indirect object of the verb geben.",
+            "gender": "Masculine because mir is used for male or female in informal address.",
+            "number": "Singular because it refers to one person."
+          }
+        },
+        {
+          "wid": 4,
+          "word": "diesen",
+          "type": "Pointing word",
+          "translation": "this",
+          "form": "Accusative case",
+          "job": "Specifies which Stift",
+          "case": "Accusative",
+          "gender": "Masculine",
+          "number": "Singular",
+          "rationale": {
+            "type": "A pointing word specifies which noun is meant — here, it singles out a specific pen.",
+            "case": "Accusative — direct object of the verb geben.",
+            "gender": "Masculine because Stift is masculine.",
+            "number": "Singular because it refers to one pen."
+          }
+        },
+        {
+          "wid": 5,
+          "word": "Stift",
+          "type": "Noun",
+          "translation": "pen",
+          "form": "Accusative case",
+          "job": "Direct object of geben",
+          "case": "Accusative",
+          "gender": "Masculine",
+          "number": "Singular",
+          "rationale": {
+            "type": "A noun names a thing — here, the object being given.",
+            "case": "Accusative — direct object of the verb geben.",
+            "gender": "Masculine because Stift is a masculine noun.",
+            "number": "Singular because it refers to one pen."
+          }
+        },
+        {
+          "wid": 6,
+          "word": "geben",
+          "type": "Verb",
+          "translation": "give",
+          "form": "Base form · no person — kannst carries it",
+          "job": "Action being asked about",
+          "rationale": {
+            "type": "A verb expresses the main action — here, the act of giving."
+          }
+        },
+        {
+          "wid": 7,
+          "word": ",",
+          "type": "Punctuation",
+          "job": "Marks the boundary between the main clause and the negation",
+          "note": "German requires a comma before a negation that contrasts with the main clause."
+        },
+        {
+          "wid": 8,
+          "word": "nicht",
+          "type": "Negation",
+          "translation": "not",
+          "job": "Negates the following pointing word",
+          "rationale": {
+            "type": "A negation reverses or denies the meaning of the word it modifies."
+          }
+        },
+        {
+          "wid": 9,
+          "word": "jenen",
+          "type": "Pointing word",
+          "translation": "that",
+          "form": "Accusative case",
+          "job": "Specifies which Stift is not meant",
+          "case": "Accusative",
+          "gender": "Masculine",
+          "number": "Singular",
+          "rationale": {
+            "type": "A pointing word specifies which noun is meant — here, it singles out a specific pen not to be given.",
+            "case": "Accusative — direct object of the implied verb geben.",
+            "gender": "Masculine because Stift is masculine.",
+            "number": "Singular because it refers to one pen."
+          }
+        }
+      ],
+      "translation": "Can you give me this pen, not that one?",
+      "difficulty": "Intermediate",
+      "tags": [
+        "demonstrative-pronouns",
+        "case-accusative",
+        "modal-verbs",
+        "everyday"
+      ],
+      "explanation": "The sentence uses demonstrative pronouns (diesen, jenen) to specify which pen is meant, with diesen in the accusative case as the direct object of geben. The modal verb kannst asks about the ability to perform the action. The negation nicht contrasts the two options.",
+      "trap": "A common mistake is using nominative forms of demonstrative pronouns (dieser, jener) instead of accusative (diesen, jenen) when they are direct objects. This would confuse the sentence structure."
+    }
+  },
+  {
+    "text": "Ich nehme diesen Mantel, nicht den dort.",
+    "concepts": [
+      "demonstrative-pronouns",
+      "case-accusative"
+    ],
+    "breakdown": {
+      "words": [
+        {
+          "wid": 1,
+          "word": "Ich",
+          "type": "Pronoun",
+          "translation": "I",
+          "form": "Nominative · 1st person singular",
+          "job": "Subject of the sentence",
+          "case": "Nominative",
+          "gender": "Masculine",
+          "number": "Singular",
+          "rationale": {
+            "type": "A pronoun stands in for the speaker, who is the subject of the sentence.",
+            "case": "Nominative — subject of the verb nehme",
+            "gender": "Masculine because it refers to the speaker, who is male.",
+            "number": "Singular because it refers to one person."
+          }
+        },
+        {
+          "wid": 2,
+          "word": "nehme",
+          "type": "Verb",
+          "translation": "take",
+          "form": "1st person singular · Present",
+          "job": "Main action of the sentence",
+          "tense": "Present",
+          "person": "1st singular",
+          "rationale": {
+            "type": "A verb expresses the main action or state in the sentence.",
+            "tense": "Present because the action is happening now.",
+            "person": "1st singular because the subject is Ich."
+          }
+        },
+        {
+          "wid": 3,
+          "word": "diesen",
+          "type": "Pointing word",
+          "translation": "this",
+          "form": "Accusative · Masculine · Singular",
+          "job": "Specifies which coat is being taken",
+          "case": "Accusative",
+          "gender": "Masculine",
+          "number": "Singular",
+          "rationale": {
+            "type": "A pointing word specifies a particular noun already understood in context.",
+            "case": "Accusative — direct object of the verb nehme",
+            "gender": "Masculine because it refers to Mantel, which is masculine.",
+            "number": "Singular because it refers to one coat."
+          }
+        },
+        {
+          "wid": 4,
+          "word": "Mantel",
+          "type": "Noun",
+          "translation": "coat",
+          "form": "Accusative · Masculine · Singular",
+          "job": "Direct object of the verb nehme",
+          "case": "Accusative",
+          "gender": "Masculine",
+          "number": "Singular",
+          "rationale": {
+            "type": "A noun names a thing — here the item being taken.",
+            "case": "Accusative — direct object of the verb nehme",
+            "gender": "Masculine because Mantel is a masculine noun.",
+            "number": "Singular because it refers to one coat."
+          }
+        },
+        {
+          "wid": 5,
+          "word": ",",
+          "type": "Punctuation",
+          "job": "Marks the boundary between the main clause and the negation",
+          "note": "German requires a comma before a negation that contrasts with the main clause."
+        },
+        {
+          "wid": 6,
+          "word": "nicht",
+          "type": "Negation",
+          "translation": "not",
+          "job": "Negates the following noun phrase"
+        },
+        {
+          "wid": 7,
+          "word": "den",
+          "type": "Article",
+          "translation": "the",
+          "form": "Accusative · Masculine · Singular",
+          "job": "Specifies which coat is not being taken",
+          "case": "Accusative",
+          "gender": "Masculine",
+          "number": "Singular",
+          "rationale": {
+            "type": "An article marks a noun and shows its case, gender, and number.",
+            "case": "Accusative — direct object of the implied verb nehme",
+            "gender": "Masculine because it refers to Mantel, which is masculine.",
+            "number": "Singular because it refers to one coat."
+          }
+        },
+        {
+          "wid": 8,
+          "word": "dort",
+          "type": "Adverb",
+          "translation": "there",
+          "job": "Specifies the location of the coat not being taken"
+        }
+      ],
+      "translation": "I take this coat, not that one there.",
+      "difficulty": "Intermediate",
+      "tags": [
+        "demonstrative-pronouns",
+        "case-accusative",
+        "negation",
+        "everyday"
+      ],
+      "explanation": "The sentence uses demonstrative pronouns to specify which coat is being taken and which is not. 'Diesen' and 'den' both appear in the accusative case because they are direct objects of the verb 'nehme'. The negation 'nicht' contrasts the two coats, emphasizing the choice.",
+      "trap": "A common mistake is to use the nominative form 'dieser' instead of the accusative 'diesen'. The accusative is required because the coat is the direct object of the action 'nehme'."
+    }
+  }
+]
