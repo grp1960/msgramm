@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { requireAuth } from '@/lib/auth'
+import { withGuards, rateLimitGuard } from '@/lib/guards'
 
 function getAdminClient() {
   return createClient(
@@ -9,7 +10,9 @@ function getAdminClient() {
   )
 }
 
-export async function POST(req: NextRequest) {
+export const POST = withGuards(
+  rateLimitGuard({ limit: 10, windowSecs: 3600, keyPrefix: 'invite' }),
+)(async function POST(req: NextRequest) {
   const { user, response: authError } = await requireAuth(req)
   if (authError) return authError
 
@@ -69,4 +72,4 @@ export async function POST(req: NextRequest) {
     .eq('code', normalised)
 
   return NextResponse.json({ ok: true, expiresAt })
-}
+})

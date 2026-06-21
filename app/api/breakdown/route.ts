@@ -47,7 +47,7 @@ export const POST = withGuards(
     return NextResponse.json({ error: 'Sentence too short' }, { status: 400 })
   }
 
-  const text = sentence.trim()
+  const text = sentence.trim().replace(/\s+/g, ' ')
 
   const wordCount = text.split(/\s+/).length
   if (wordCount > 40) {
