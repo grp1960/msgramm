@@ -18,7 +18,7 @@ type Props = {
   userId?: string
 }
 
-export default function ChatPanel({ sentence, userId }: Props) {
+export default function ChatPanel({ sentence }: Props) {
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
@@ -52,8 +52,7 @@ export default function ChatPanel({ sentence, userId }: Props) {
     const content = (text ?? input).trim()
     if (!content || loading) return
     const userMsg: Message = { role: 'user', content }
-    const newMessages = [...messages, userMsg]
-    setMessages(newMessages)
+    setMessages(m => [...m, userMsg])
     setInput('')
     if (textareaRef.current) textareaRef.current.style.height = 'auto'
     setLoading(true)
@@ -61,7 +60,7 @@ export default function ChatPanel({ sentence, userId }: Props) {
     try {
       const res = await authFetch('/api/chat', {
         method: 'POST',
-        body: JSON.stringify({ messages: newMessages, sentence, lastMessage: input.trim() }),
+        body: JSON.stringify({ newMessage: content, sentenceId: sentence.id }),
       })
       const data = await res.json()
       if (!res.ok) {

@@ -13,9 +13,7 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
 )
 
-const MAX_MESSAGES = 20
 const MAX_MESSAGE_CHARS = 2000
-const ALLOWED_ROLES = new Set(['user', 'assistant'])
 
 export const POST = withGuards(
   rateLimitGuard({ limit: 100, windowSecs: 86400, keyPrefix: 'chat' }),
@@ -23,28 +21,22 @@ export const POST = withGuards(
   const { user, response: authError } = await requireAuth(req)
   if (authError) return authError
 
-  const { messages, sentence } = await req.json()
+  const { newMessage, sentenceId } = await req.json()
 
-  // Validate messages array
-  if (!Array.isArray(messages) || messages.length === 0) {
-    return NextResponse.json({ error: 'Invalid messages.' }, { status: 400 })
+  if (typeof newMessage !== 'string' || newMessage.trim().length === 0) {
+    return NextResponse.json({ error: 'Invalid message.' }, { status: 400 })
   }
-  if (messages.length > MAX_MESSAGES) {
-    return NextResponse.json({ error: 'Too many messages.' }, { status: 400 })
-  }
-  for (const m of messages) {
-    if (!ALLOWED_ROLES.has(m?.role)) return NextResponse.json({ error: 'Invalid message role.' }, { status: 400 })
-    if (typeof m?.content !== 'string' || m.content.length > MAX_MESSAGE_CHARS) {
-      return NextResponse.json({ error: 'Message too long.' }, { status: 400 })
-    }
+  if (newMessage.length > MAX_MESSAGE_CHARS) {
+    return NextResponse.json({ error: 'Message too long.' }, { status: 400 })
   }
 
-  // Run content guards against the actual last user message
-  const lastUserMsg = [...messages].reverse().find((m: any) => m.role === 'user')?.content ?? ''
+  const content = newMessage.trim()
+
+  // Run content guards against the new user message only
   const guardReq = new Request(req.url, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ lastMessage: lastUserMsg }),
+    body: JSON.stringify({ lastMessage: content }),
   }) as NextRequest
 
   const hGuard = heuristicGuard({ field: 'lastMessage' })
@@ -64,6 +56,32 @@ export const POST = withGuards(
     )
   }
 
+  // Load prior history from DB
+  let history: { role: 'user' | 'assistant'; content: string }[] = []
+  if (sentenceId) {
+    const { data: rows } = await supabaseAdmin
+      .from('chat_messages')
+      .select('role, content')
+      .eq('user_id', userId)
+      .eq('sentence_id', sentenceId)
+      .order('created_at', { ascending: true })
+      .limit(40)
+    if (rows) history = rows as { role: 'user' | 'assistant'; content: string }[]
+  }
+
+  const messages = [...history, { role: 'user' as const, content }]
+
+  // Fetch sentence context
+  let sentence: { language: string; text: string; breakdown?: { translation?: string } } | null = null
+  if (sentenceId) {
+    const { data } = await supabaseAdmin
+      .from('sentences')
+      .select('language, text, breakdown')
+      .eq('id', sentenceId)
+      .single()
+    sentence = data
+  }
+
   // Fetch active system prompt from DB
   const { data: promptData } = await supabaseAdmin
     .from('system_prompts')
@@ -72,7 +90,7 @@ export const POST = withGuards(
     .eq('active', true)
     .single()
 
-  const basePrompt = promptData?.content ?? 'You are a language learning assistant.'
+  const basePrompt = (promptData as { content?: string } | null)?.content ?? 'You are a language learning assistant.'
 
   const systemPrompt = sentence
     ? `${basePrompt}\n\nCurrent sentence being studied:\nLanguage: ${sentence.language}\nText: ${sentence.text}\nTranslation: ${sentence.breakdown?.translation ?? ''}`
@@ -95,20 +113,19 @@ export const POST = withGuards(
     return NextResponse.json({ error: 'OpenAI error' }, { status: 500 })
   }
 
-  if (sentence?.id) {
-    const userMessage = messages[messages.length - 1]
+  if (sentenceId) {
     await supabaseAdmin.from('chat_messages').insert([
       {
         user_id: userId,
-        sentence_id: sentence.id,
+        sentence_id: sentenceId,
         role: 'user',
-        content: userMessage.content,
+        content,
         prompt_tokens: usage?.prompt_tokens ?? 0,
         completion_tokens: 0,
       },
       {
         user_id: userId,
-        sentence_id: sentence.id,
+        sentence_id: sentenceId,
         role: 'assistant',
         content: reply.content,
         prompt_tokens: 0,

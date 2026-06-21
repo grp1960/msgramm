@@ -54,7 +54,7 @@ export const POST = withGuards(
     return NextResponse.json({ status: 'invalid', message: 'Sentence too long.' })
   }
 
-  const quota = await checkQuota(user!.id, 400)
+  const quota = await checkQuota(user!.id, 1200)
   if (!quota.allowed) {
     return NextResponse.json(
       { error: quota.expired ? 'PILOT_EXPIRED' : 'QUOTA_EXCEEDED', message: quota.reason },
