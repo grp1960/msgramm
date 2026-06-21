@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { Sentence } from '@/lib/types'
+import { authFetch } from '@/lib/authFetch'
 
 type Message = { role: 'user' | 'assistant'; content: string }
 
@@ -58,10 +59,9 @@ export default function ChatPanel({ sentence, userId }: Props) {
     setLoading(true)
 
     try {
-      const res = await fetch('/api/chat', {
+      const res = await authFetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: newMessages, sentence, userId, lastMessage: input.trim() }),
+        body: JSON.stringify({ messages: newMessages, sentence, lastMessage: input.trim() }),
       })
       const data = await res.json()
       if (!res.ok) {

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 import { recordUsage } from '@/lib/quota'
+import { requireAuth } from '@/lib/auth'
+import { withGuards, rateLimitGuard } from '@/lib/guards'
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
@@ -38,10 +40,18 @@ INVALID (return status: invalid) only when:
 
 Keep "why" explanations short and plain — no linguistics jargon. Say "direct object, so accusative" not "accusative case required by transitive verb governing NP".`
 
-export async function POST(req: NextRequest) {
-  const { sentence, userId } = await req.json()
+export const POST = withGuards(
+  rateLimitGuard({ limit: 30, windowSecs: 86400, keyPrefix: 'check' }),
+)(async (req: NextRequest): Promise<NextResponse> => {
+  const { user, response: authError } = await requireAuth(req)
+  if (authError) return authError
+
+  const { sentence } = await req.json()
   if (!sentence || sentence.trim().length < 4) {
     return NextResponse.json({ status: 'invalid', message: 'Sentence too short.' })
+  }
+  if (sentence.length > 500) {
+    return NextResponse.json({ status: 'invalid', message: 'Sentence too long.' })
   }
 
   try {
@@ -56,13 +66,10 @@ export async function POST(req: NextRequest) {
       temperature: 0,
     })
     const parsed = JSON.parse(res.choices[0].message.content ?? '{}')
-    if (userId) {
-      const periodStart = new Date().toISOString().slice(0, 10)
-      await recordUsage(userId, periodStart, res.usage?.total_tokens ?? 0)
-    }
+    const periodStart = new Date().toISOString().slice(0, 10)
+    await recordUsage(user!.id, periodStart, res.usage?.total_tokens ?? 0)
     return NextResponse.json(parsed)
   } catch {
-    // Fail open — if checker errors, let the breakdown proceed
     return NextResponse.json({ status: 'clean' })
   }
-}
+})

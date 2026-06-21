@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Sentence } from '@/lib/types'
 import { supabase } from '@/lib/supabase'
+import { authFetch } from '@/lib/authFetch'
 import type { User } from '@supabase/supabase-js'
 import Breakdown from './Breakdown'
 import ChatPanel from './ChatPanel'
@@ -68,7 +69,7 @@ export default function SentencePage({ sentence, isNew, isUnsaved }: { sentence:
 
   async function handleDiscard() {
     setUnsaved(false)
-    await fetch(`/api/sentences/${sentence.id}`, { method: 'DELETE' })
+    await authFetch(`/api/sentences/${sentence.id}`, { method: 'DELETE' })
     router.push('/')
   }
 

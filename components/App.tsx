@@ -6,6 +6,7 @@ import { Sentence, Difficulty } from '@/lib/types'
 import { supabase } from '@/lib/supabase'
 import type { User } from '@supabase/supabase-js'
 import Link from 'next/link'
+import { authFetch } from '@/lib/authFetch'
 import AuthModal from './AuthModal'
 import SignUpModal from './SignUpModal'
 import FeedbackModal from './FeedbackModal'
@@ -111,10 +112,9 @@ export default function App() {
         if (pending) {
           try {
             const profile = JSON.parse(pending)
-            fetch('/api/profile/complete', {
+            authFetch('/api/profile/complete', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ userId: session.user.id, ...profile }),
+              body: JSON.stringify(profile),
             }).finally(() => localStorage.removeItem('mg_pending_profile'))
           } catch {
             localStorage.removeItem('mg_pending_profile')
@@ -172,10 +172,9 @@ export default function App() {
     setPhase('checking')
     try {
       // 1. Check for errors first
-      const checkRes = await fetch('/api/check', {
+      const checkRes = await authFetch('/api/check', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sentence: text, userId: user?.id ?? null }),
+        body: JSON.stringify({ sentence: text }),
       })
       const check = await checkRes.json()
 
@@ -203,10 +202,9 @@ export default function App() {
   async function runBreakdown(text: string) {
     setPhase('loading')
     try {
-      const res = await fetch('/api/breakdown', {
+      const res = await authFetch('/api/breakdown', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sentence: text, language: inputLang, userId: user?.id ?? null }),
+        body: JSON.stringify({ sentence: text, language: inputLang }),
       })
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))

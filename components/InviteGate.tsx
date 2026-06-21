@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { authFetch } from '@/lib/authFetch'
 
 type Props = {
   userId: string
@@ -18,10 +19,9 @@ export default function InviteGate({ userId, onActivated }: Props) {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch('/api/invite/redeem', {
+      const res = await authFetch('/api/invite/redeem', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: trimmed, userId }),
+        body: JSON.stringify({ code: trimmed }),
       })
       const data = await res.json()
       if (!res.ok) {

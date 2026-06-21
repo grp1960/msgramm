@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 import { supabase } from '@/lib/supabase'
 import { SYSTEM_PROMPT } from '@/lib/prompt'
-import { withGuards, heuristicGuard, rateLimitGuard, llmGuard, quotaGuard } from '@/lib/guards'
+import { withGuards, heuristicGuard, rateLimitGuard, llmGuard } from '@/lib/guards'
 import { checkQuota, recordUsage } from '@/lib/quota'
+import { requireAuth, isAdmin } from '@/lib/auth'
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
@@ -31,17 +32,16 @@ function validateBreakdown(obj: any): { valid: boolean; reason: string } {
 }
 
 // ─── Guard chain ───────────────────────────────────────────────────────────
-// llmGuard is invoked manually inside the handler (after the cache check) so
-// we only pay for the classifier on new, uncached sentences.
-// quotaGuard runs after cache check (inside handler) for the same reason —
-// cached hits don't consume tokens and shouldn't count against quota.
 const llm = llmGuard()
 
 export const POST = withGuards(
   heuristicGuard(),
   rateLimitGuard({ limit: 20, windowSecs: 86400, keyPrefix: 'breakdown' }),
 )(async (req: NextRequest): Promise<NextResponse> => {
-  const { sentence, language, original_id, original_language, force, userId } = await req.json()
+  const { user, response: authError } = await requireAuth(req)
+  if (authError) return authError
+
+  const { sentence, language, original_id, original_language, force } = await req.json()
 
   if (!sentence || sentence.trim().length < 4) {
     return NextResponse.json({ error: 'Sentence too short' }, { status: 400 })
@@ -57,8 +57,13 @@ export const POST = withGuards(
     )
   }
 
-  // 1. Cache check — if already in DB, skip LLM guard and return immediately
-  if (!force) {
+  // force is admin-only — allows refreshing a cached breakdown
+  const userId = user!.id
+  const adminUser = force ? await isAdmin(userId) : false
+  const useForce = force && adminUser
+
+  // 1. Cache check
+  if (!useForce) {
     const { data: cached } = await supabase
       .from('sentences')
       .select('*')
@@ -70,32 +75,26 @@ export const POST = withGuards(
     if (cached) return NextResponse.json(cached)
   }
 
-  // 2. Quota check (only for new, uncached sentences — cached hits are free)
-  let quotaPeriodStart = ''
-  if (!force) {
-    const quota = await checkQuota(userId ?? '', 2500)
-    if (!quota.allowed) {
-      const error = quota.expired ? 'PILOT_EXPIRED' : 'QUOTA_EXCEEDED'
-      return NextResponse.json(
-        { error, message: quota.reason, periodEnd: quota.periodEnd },
-        { status: 429 },
-      )
-    }
-    quotaPeriodStart = quota.periodStart
+  // 2. Quota check (only for new, uncached sentences)
+  const quota = await checkQuota(userId, 2500)
+  if (!quota.allowed) {
+    const error = quota.expired ? 'PILOT_EXPIRED' : 'QUOTA_EXCEEDED'
+    return NextResponse.json(
+      { error, message: quota.reason, periodEnd: quota.periodEnd },
+      { status: 429 },
+    )
   }
+  const quotaPeriodStart = quota.periodStart
 
-  // 3. LLM content guard (only for new, uncached sentences)
-  if (!force) {
-    // Reconstruct a minimal request for the guard to read
-    const guardReq = new Request(req.url, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ sentence: text }),
-    }) as NextRequest
+  // 3. LLM content guard
+  const guardReq = new Request(req.url, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ sentence: text }),
+  }) as NextRequest
 
-    const rejection = await llm(guardReq, {})
-    if (rejection) return rejection as NextResponse
-  }
+  const rejection = await llm(guardReq, {})
+  if (rejection) return rejection as NextResponse
 
   // 4. Generate breakdown
   let breakdown
@@ -112,12 +111,8 @@ export const POST = withGuards(
     })
     breakdown = JSON.parse(response.choices[0].message.content ?? '{}')
 
-    // Record actual token usage (always, including admins — quota only enforced for non-admins)
-    if (userId) {
-      const periodStart = quotaPeriodStart || new Date().toISOString().slice(0, 10)
-      const total = (response.usage?.total_tokens ?? 0)
-      await recordUsage(userId, periodStart, total)
-    }
+    const periodStart = quotaPeriodStart || new Date().toISOString().slice(0, 10)
+    await recordUsage(userId, periodStart, response.usage?.total_tokens ?? 0)
   } catch {
     return NextResponse.json({ error: 'OpenAI error' }, { status: 500 })
   }
@@ -130,7 +125,7 @@ export const POST = withGuards(
     )
   }
 
-  // 5b. Validate output schema before saving
+  // 5b. Validate output schema
   const { valid, reason } = validateBreakdown(breakdown)
   if (!valid) {
     console.error(`[breakdown] Output validation failed for "${text}": ${reason}`)
@@ -146,7 +141,7 @@ export const POST = withGuards(
   if (original_language) row.original_language = original_language
 
   let data, error
-  if (force) {
+  if (useForce) {
     const result = await supabase
       .from('sentences')
       .update(row)
@@ -170,5 +165,5 @@ export const POST = withGuards(
     return NextResponse.json({ error: 'Failed to save' }, { status: 500 })
   }
 
-  return NextResponse.json({ ...data, _newly_created: !force })
+  return NextResponse.json({ ...data, _newly_created: !useForce })
 })

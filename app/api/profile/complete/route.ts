@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { requireAuth } from '@/lib/auth'
 
 function getAdminClient() {
   return createClient(
@@ -9,13 +10,13 @@ function getAdminClient() {
 }
 
 export async function POST(req: NextRequest) {
-  const { userId, first_name, last_name, username, display_name } = await req.json()
+  const { user, response: authError } = await requireAuth(req)
+  if (authError) return authError
 
-  if (!userId) return NextResponse.json({ error: 'Missing userId.' }, { status: 400 })
-
+  const { first_name, last_name, username, display_name } = await req.json()
+  const userId = user!.id
   const db = getAdminClient()
 
-  // Check username isn't already taken
   if (username) {
     const { data: existing } = await db
       .from('profiles')
