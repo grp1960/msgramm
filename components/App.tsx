@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Sentence, Difficulty } from '@/lib/types'
 import { supabase } from '@/lib/supabase'
@@ -99,6 +99,10 @@ export default function App() {
   const [allSavedIds, setAllSavedIds] = useState<Set<string>>(new Set())
   const [showFeedback, setShowFeedback] = useState(false)
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<Sentence[] | null>(null)
+  const [searchLoading, setSearchLoading] = useState(false)
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     loadSentences()
@@ -163,6 +167,26 @@ export default function App() {
       setSavedList(list)
       setSavedIds(new Set(list.map(s => s.id)))
     }
+  }
+
+  const runSearch = useCallback(async (q: string) => {
+    if (q.trim().length < 3) { setSearchResults(null); return }
+    setSearchLoading(true)
+    const { data } = await supabase
+      .from('sentences')
+      .select('*')
+      .ilike('text', `%${q.trim()}%`)
+      .order('difficulty', { ascending: true })
+      .limit(30)
+    setSearchResults((data as Sentence[]) ?? [])
+    setSearchLoading(false)
+  }, [])
+
+  function handleSearchChange(q: string) {
+    setSearchQuery(q)
+    if (searchTimer.current) clearTimeout(searchTimer.current)
+    if (q.trim().length < 3) { setSearchResults(null); return }
+    searchTimer.current = setTimeout(() => runSearch(q), 300)
   }
 
   async function submit() {
@@ -295,8 +319,58 @@ export default function App() {
         {/* ── List view ── */}
         {view === 'list' && (
           <div>
-            {/* Toolbar: All / Built-in / Personal */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 40, flexWrap: 'wrap' }}>
+            {/* Search */}
+            <div style={{ position: 'relative', marginBottom: 32 }}>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => handleSearchChange(e.target.value)}
+                placeholder="Search sentences…"
+                style={{
+                  width: '100%',
+                  padding: '12px 40px 12px 16px',
+                  fontFamily: 'var(--display)',
+                  fontWeight: 300,
+                  fontSize: 18,
+                  letterSpacing: '-0.01em',
+                  color: 'var(--ink)',
+                  background: 'transparent',
+                  border: 'none',
+                  borderBottom: '2px solid var(--ink)',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                }}
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => { setSearchQuery(''); setSearchResults(null) }}
+                  style={{
+                    position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)',
+                    background: 'none', border: 0, cursor: 'pointer',
+                    fontFamily: 'var(--mono)', fontSize: 18, color: 'var(--ink-40)',
+                    padding: '0 8px',
+                  }}
+                >×</button>
+              )}
+            </div>
+
+            {/* Search results */}
+            {searchResults !== null && (
+              <div style={{ marginBottom: 40 }}>
+                {searchLoading ? (
+                  <p style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--ink-40)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Searching…</p>
+                ) : searchResults.length === 0 ? (
+                  <p style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--ink-40)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>No results</p>
+                ) : (
+                  searchResults.map(s => (
+                    <SentenceRow key={s.id} s={s} onClick={() => openSentence(s)} saved={savedIds.has(s.id)} />
+                  ))
+                )}
+              </div>
+            )}
+
+            {/* Toolbar: All / Built-in / Personal — hidden during search */}
+            {searchResults === null && <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 40, flexWrap: 'wrap' }}>
               <div className="mg-mode-toggle">
                 {([
                   { key: 'all',      label: 'All' },
@@ -315,10 +389,10 @@ export default function App() {
                   </button>
                 ))}
               </div>
-            </div>
+            </div>}
 
-            {/* Grammar concept browser */}
-            <div style={{ borderTop: 'var(--border-rule)', paddingTop: 16, marginTop: 8 }}>
+            {/* Grammar concept browser — hidden during search */}
+            {searchResults === null && <div style={{ borderTop: 'var(--border-rule)', paddingTop: 16, marginTop: 8 }}>
 
               {/* Category tabs */}
               <div style={{ display: 'flex', gap: 0, flexWrap: 'wrap', marginBottom: 12 }}>
@@ -376,10 +450,10 @@ export default function App() {
                   </div>
                 )
               })()}
-            </div>
+            </div>}
 
             {/* All / Built-in — grouped by difficulty */}
-            {(listFilter === 'all' || listFilter === 'builtin') && (
+            {searchResults === null && (listFilter === 'all' || listFilter === 'builtin') && (
               DIFFICULTY_ORDER.filter(d => grouped[d]).map(d => {
                 const isCollapsed = collapsed.has(d)
                 return (
@@ -410,7 +484,7 @@ export default function App() {
             )}
 
             {/* Personal */}
-            {listFilter === 'personal' && (
+            {searchResults === null && listFilter === 'personal' && (
               visibleSentences.length === 0 ? (
                 <p style={{ fontFamily: 'var(--mono)', fontSize: '13px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ink-40)', marginTop: 48 }}>
                   No personal sentences yet. Use + Enter a sentence to add one.
