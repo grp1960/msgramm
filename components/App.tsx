@@ -151,6 +151,13 @@ export default function App() {
     if (data) setSentences(data as Sentence[])
   }
 
+  // Featured sentences for unauthenticated teaser — one per difficulty
+  const featuredByDifficulty = DIFFICULTY_ORDER.reduce((acc, d) => {
+    const match = sentences.find(s => (s.difficulty ?? 'Intermediate') === d && (s.tags ?? []).includes('featured'))
+    if (match) acc.push(match)
+    return acc
+  }, [] as Sentence[])
+
   async function loadAllSaved() {
     const { data } = await supabase.from('saved_sentences').select('sentence_id')
     if (data) setAllSavedIds(new Set(data.map((r: any) => r.sentence_id)))
@@ -264,9 +271,60 @@ export default function App() {
   }, {} as Partial<Record<Difficulty, Sentence[]>>)
 
 
-  // Show invite gate if user is signed in but has no license
+  // Signed in but no license — show pending screen
   if (user && hasLicense === false) {
     return <InviteGate userId={user.id} onActivated={() => checkLicense(user.id)} />
+  }
+
+  // Not signed in — show teaser view
+  if (!user) {
+    return (
+      <>
+        {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+        {showSignUp && (
+          <SignUpModal
+            onClose={() => setShowSignUp(false)}
+            onSwitchToSignIn={() => { setShowSignUp(false); setShowAuth(true) }}
+          />
+        )}
+        <div className="mg-shell">
+          <header className="mg-header">
+            <span className="mg-wordmark">Ms<span className="dot" />Gramm</span>
+            <div className="mg-header-meta"><span>Sentence Breakdown</span></div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <button onClick={() => { setShowSignUp(false); setShowAuth(true) }} style={{ ...monoLink, background: 'transparent', border: 0, cursor: 'pointer' }}>Sign in</button>
+              <button onClick={() => { setShowAuth(false); setShowSignUp(true) }} style={{ ...monoLink, background: 'var(--ink)', color: 'white', border: 0, padding: '4px 12px', cursor: 'pointer' }}>Sign up</button>
+            </div>
+          </header>
+
+          <div style={{ marginBottom: 32 }}>
+            <p style={{ fontFamily: 'var(--display)', fontWeight: 300, fontSize: 'clamp(16px,1.6vw,20px)', color: 'var(--ink-60)', lineHeight: 1.6, maxWidth: 560 }}>
+              Break down German sentences word by word — grammar, case, role, and rationale.
+            </p>
+          </div>
+
+          {featuredByDifficulty.map(s => (
+            <SentenceRow key={s.id} s={s} onClick={() => openSentence(s)} />
+          ))}
+
+          <div style={{
+            marginTop: 40, padding: '24px 0',
+            borderTop: 'var(--border-rule)',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16,
+          }}>
+            <p style={{ fontFamily: 'var(--sans)', fontSize: 15, color: 'var(--ink-60)', margin: 0 }}>
+              Sign up to access all sentences and break down your own.
+            </p>
+            <button
+              onClick={() => { setShowAuth(false); setShowSignUp(true) }}
+              style={{ fontFamily: 'var(--mono)', fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase', background: 'var(--ink)', color: 'white', border: 0, padding: '10px 24px', cursor: 'pointer' }}
+            >
+              Get started
+            </button>
+          </div>
+        </div>
+      </>
+    )
   }
 
   return (
