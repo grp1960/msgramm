@@ -8,6 +8,7 @@ import type { User } from '@supabase/supabase-js'
 import Link from 'next/link'
 import { authFetch } from '@/lib/authFetch'
 import AuthModal from './AuthModal'
+import SignUpModal from './SignUpModal'
 import FeedbackModal from './FeedbackModal'
 import InviteGate from './InviteGate'
 
@@ -92,6 +93,7 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null)
   const [hasLicense, setHasLicense] = useState<boolean | null>(null)
   const [showAuth, setShowAuth] = useState(false)
+  const [showSignUp, setShowSignUp] = useState(false)
   const [savedList, setSavedList] = useState<Sentence[]>([])
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
   const [allSavedIds, setAllSavedIds] = useState<Set<string>>(new Set())
@@ -246,6 +248,12 @@ export default function App() {
   return (
     <>
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+      {showSignUp && (
+        <SignUpModal
+          onClose={() => setShowSignUp(false)}
+          onSwitchToSignIn={() => { setShowSignUp(false); setShowAuth(true) }}
+        />
+      )}
       {showFeedback && (
         <FeedbackModal scope="general" userId={user?.id} userEmail={user?.email} onClose={() => setShowFeedback(false)} />
       )}
@@ -277,7 +285,8 @@ export default function App() {
               <button onClick={() => supabase.auth.signOut()} style={{ ...monoLink, background: 'transparent', border: 0, cursor: 'pointer' }}>Sign out</button>
             ) : (
               <>
-                <button onClick={() => setShowAuth(true)} style={{ ...monoLink, background: 'transparent', border: 0, cursor: 'pointer' }}>Sign in</button>
+                <button onClick={() => { setShowSignUp(false); setShowAuth(true) }} style={{ ...monoLink, background: 'transparent', border: 0, cursor: 'pointer' }}>Sign in</button>
+                <button onClick={() => { setShowAuth(false); setShowSignUp(true) }} style={{ ...monoLink, background: 'var(--ink)', color: 'white', border: 0, padding: '4px 12px', cursor: 'pointer' }}>Sign up</button>
               </>
             )}
           </div>
