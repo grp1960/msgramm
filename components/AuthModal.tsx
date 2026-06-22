@@ -15,7 +15,7 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
     setError(null)
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: window.location.origin, shouldCreateUser: false },
+      options: { emailRedirectTo: window.location.origin },
     })
     setLoading(false)
     if (error) { setError(error.message); return }
