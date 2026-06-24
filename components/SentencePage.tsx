@@ -11,9 +11,11 @@ import Breakdown from './Breakdown'
 import ChatPanel from './ChatPanel'
 import AuthModal from './AuthModal'
 import FeedbackModal, { FeedbackScope } from './FeedbackModal'
+import { useToast } from './ToastProvider'
 
 export default function SentencePage({ sentence, isNew, isUnsaved }: { sentence: Sentence; isNew?: boolean; isUnsaved?: boolean }) {
   const router = useRouter()
+  const toast = useToast()
   const [user, setUser] = useState<User | null>(null)
   const [saved, setSaved] = useState(false)
   const [unsaved, setUnsaved] = useState(isUnsaved ?? false)
@@ -21,6 +23,17 @@ export default function SentencePage({ sentence, isNew, isUnsaved }: { sentence:
   const [showAuth, setShowAuth] = useState(false)
   const [feedbackScope, setFeedbackScope] = useState<FeedbackScope | null>(null)
   const unsavedRef = useRef(unsaved)
+
+  useEffect(() => {
+    const key = 'mg_hover_hint_shown'
+    if (!localStorage.getItem(key)) {
+      const t = setTimeout(() => {
+        toast.show('Hover over words for details', 5000)
+        localStorage.setItem(key, '1')
+      }, 800)
+      return () => clearTimeout(t)
+    }
+  }, [])
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user))

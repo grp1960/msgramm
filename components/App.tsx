@@ -10,7 +10,6 @@ import { authFetch } from '@/lib/authFetch'
 import AuthModal from './AuthModal'
 import SignUpModal from './SignUpModal'
 import FeedbackModal from './FeedbackModal'
-import InviteGate from './InviteGate'
 
 const DIFFICULTY_ORDER: Difficulty[] = ['Beginner', 'Intermediate', 'Advanced', 'Expert']
 
@@ -271,10 +270,7 @@ export default function App() {
   }, {} as Partial<Record<Difficulty, Sentence[]>>)
 
 
-  // Signed in but no license — show pending screen
-  if (user && hasLicense === false) {
-    return <InviteGate userId={user.id} onActivated={() => checkLicense(user.id)} />
-  }
+  const licensed = hasLicense === true
 
   // Not signed in — show teaser view
   if (!user) {
@@ -433,15 +429,18 @@ export default function App() {
                 {([
                   { key: 'all',      label: 'All' },
                   { key: 'builtin',  label: 'Core' },
-                  { key: 'personal', label: 'Mine' },
+                  { key: 'personal', label: 'Mine', requiresLicense: true },
                 ] as const).map(f => (
                   <button
                     key={f.key}
                     aria-pressed={listFilter === f.key ? 'true' : 'false'}
+                    disabled={'requiresLicense' in f && !licensed}
                     onClick={() => {
                       if (f.key === 'personal' && !user) { setShowAuth(true); return }
+                      if ('requiresLicense' in f && !licensed) return
                       setListFilter(f.key)
                     }}
+                    style={'requiresLicense' in f && !licensed ? { opacity: 0.35, cursor: 'default' } : undefined}
                   >
                     {f.label}
                   </button>
