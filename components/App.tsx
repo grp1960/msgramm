@@ -10,6 +10,7 @@ import { authFetch } from '@/lib/authFetch'
 import AuthModal from './AuthModal'
 import SignUpModal from './SignUpModal'
 import FeedbackModal from './FeedbackModal'
+import { useToast } from './ToastProvider'
 
 const DIFFICULTY_ORDER: Difficulty[] = ['Beginner', 'Intermediate', 'Advanced', 'Expert']
 
@@ -75,6 +76,7 @@ type ListFilter = 'all' | 'builtin' | 'personal'
 
 export default function App() {
   const router = useRouter()
+  const toast = useToast()
   const [view, setView] = useState<View>(() =>
     typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('add') === '1'
       ? 'enter' : 'list'
@@ -355,7 +357,10 @@ export default function App() {
             {view === 'enter' ? (
               <button onClick={() => setView('list')} style={monoLink}>← Sentences</button>
             ) : (
-              <button onClick={() => setView('enter')} style={monoLink}>+ Enter a sentence</button>
+              <button onClick={() => {
+                if (!licensed) { toast.show('Sentence submission is invite-only during our pilot. Stay tuned.'); return }
+                setView('enter')
+              }} style={monoLink}>+ Enter a sentence</button>
             )}
             <Link href="/topics" style={monoLink}>Topics</Link>
             <button onClick={() => setShowFeedback(true)} style={{ ...monoLink, background: 'transparent', border: '1.5px solid #E8742A', color: '#E8742A', padding: '3px 10px', cursor: 'pointer' }}>Feedback</button>
