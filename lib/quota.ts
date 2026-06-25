@@ -146,7 +146,7 @@ export async function checkQuota(
       limit,
       periodStart,
       periodEnd,
-      reason: `Monthly token quota reached (${tokensUsed.toLocaleString()} / ${limit.toLocaleString()} used). Your quota resets on ${periodEnd}.`,
+      reason: `You've used up your sentences for this month. Your allowance resets on ${periodEnd}.`,
     }
   }
 

@@ -242,7 +242,7 @@ export default function App() {
         const body = await res.json().catch(() => ({}))
         if (res.status === 422) throw new Error(body.message ?? "This doesn't look like a natural language sentence.")
         if (res.status === 429 && body.error === 'PILOT_EXPIRED') throw new Error(body.message ?? 'Your pilot access has ended. Thank you for being part of the Ms. Gramm pilot!')
-        if (res.status === 429 && body.error === 'QUOTA_EXCEEDED') throw new Error(body.message ?? 'Monthly token quota reached. Please try again next period.')
+        if (res.status === 429 && body.error === 'QUOTA_EXCEEDED') throw new Error(body.message ?? "You've used up your sentences for this month. Your allowance resets soon.")
         throw new Error(body.error ?? 'Something went wrong. Please try again.')
       }
       const data = await res.json()
