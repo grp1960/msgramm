@@ -10,6 +10,7 @@ import { authFetch } from '@/lib/authFetch'
 import AuthModal from './AuthModal'
 import SignUpModal from './SignUpModal'
 import FeedbackModal from './FeedbackModal'
+import RequestAccessModal from './RequestAccessModal'
 import { useToast } from './ToastProvider'
 
 const DIFFICULTY_ORDER: Difficulty[] = ['Beginner', 'Intermediate', 'Advanced', 'Expert']
@@ -99,6 +100,7 @@ export default function App() {
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
   const [allSavedIds, setAllSavedIds] = useState<Set<string>>(new Set())
   const [showFeedback, setShowFeedback] = useState(false)
+  const [showRequestAccess, setShowRequestAccess] = useState(false)
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<Sentence[] | null>(null)
@@ -337,6 +339,9 @@ export default function App() {
       {showFeedback && (
         <FeedbackModal scope="general" userId={user?.id} userEmail={user?.email} onClose={() => setShowFeedback(false)} />
       )}
+      {showRequestAccess && user && (
+        <RequestAccessModal userId={user.id} email={user.email ?? ''} onClose={() => setShowRequestAccess(false)} />
+      )}
 
       {/* Loading overlay */}
       {(phase === 'loading' || phase === 'checking') && <BreakdownLoader sentence={input} />}
@@ -358,7 +363,7 @@ export default function App() {
               <button onClick={() => setView('list')} style={monoLink}>← Sentences</button>
             ) : (
               <button onClick={() => {
-                if (!licensed) { toast.show('Sentence submission is invite-only during our pilot. Stay tuned.'); return }
+                if (!licensed) { setShowRequestAccess(true); return }
                 setView('enter')
               }} style={monoLink}>+ Enter a sentence</button>
             )}
