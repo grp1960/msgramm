@@ -8,7 +8,7 @@ import { supabase } from '@/lib/supabase'
 import { authFetch } from '@/lib/authFetch'
 import type { User } from '@supabase/supabase-js'
 import Breakdown from './Breakdown'
-import ChatPanel from './ChatPanel'
+// import ChatPanel from './ChatPanel'
 import AuthModal from './AuthModal'
 import FeedbackModal, { FeedbackScope } from './FeedbackModal'
 import { useToast } from './ToastProvider'
@@ -228,7 +228,7 @@ export default function SentencePage({ sentence, isNew, isUnsaved }: { sentence:
         />
       </div>
 
-      <ChatPanel sentence={sentence} userId={user?.id} />
+      {/* <ChatPanel sentence={sentence} userId={user?.id} /> */}
     </>
   )
 }
