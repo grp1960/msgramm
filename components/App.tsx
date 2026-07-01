@@ -12,6 +12,7 @@ import SignUpModal from './SignUpModal'
 import FeedbackModal from './FeedbackModal'
 import RequestAccessModal from './RequestAccessModal'
 import AccountPanel from './AccountPanel'
+import HelpPanel from './HelpPanel'
 import { useToast } from './ToastProvider'
 
 const DIFFICULTY_ORDER: Difficulty[] = ['Beginner', 'Intermediate', 'Advanced', 'Expert']
@@ -369,6 +370,7 @@ export default function App() {
               }} style={monoLink}>+ Enter a sentence</button>
             )}
             <Link href="/topics" style={monoLink}>Topics</Link>
+            <HelpPanel />
             <button onClick={() => setShowFeedback(true)} style={{ ...monoLink, background: 'transparent', border: '1.5px solid #E8742A', color: '#E8742A', padding: '3px 10px', cursor: 'pointer' }}>Feedback</button>
             {user ? (
               <AccountPanel email={user.email ?? ''} onSignOut={() => supabase.auth.signOut()} />
